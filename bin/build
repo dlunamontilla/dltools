@@ -1,0 +1,158 @@
+#!/usr/bin/env php
+<?php
+// include "copy.php";
+
+class Deploy {
+    /**
+     * Repositorio remoto
+     *
+     * @var string
+     */
+    private string $origin;
+
+
+    /**
+     * Ruta del directorio de despliegue.
+     * 
+     * @var string
+     */
+    private string $dir;
+
+
+    /**
+     * Directorio donde se construyó la aplicación.
+     *
+     * @var string
+     */
+    private string $dist;
+
+    /**
+     * Variables de entorno para indicar si previamente se había desplegado el proyecto.
+     *
+     * @var string
+     */
+    private string $param;
+
+    /**
+     * Ruta del directorio .git para asegurar que exista.
+     *
+     * @var string
+     */
+    private string $gitDir;
+
+    /**
+     * Ruta del archivo .env que debe ser eliminado.
+     * 
+     * @var string
+     */
+    private string $env;
+
+    public function __construct() {
+        $this->origin = "origin";
+        $this->dir = dirname(__FILE__, 3) . "/deploy";
+        $this->dist = dirname(__FILE__, 2) . "/dist";
+        $this->param = dirname(__FILE__, 1) . "/param.json";
+        $this->gitDir = dirname(__FILE__, 2) . "/dist/.git";
+
+        $this->env = "{$this->dist}/.env";
+    }
+
+    /**
+     * Despliegue de la aplicación en el servidor
+     *
+     * @return void
+     */
+    public function server(string $origin = "origin"): void {
+        $this->origin = trim($origin);
+
+        /**
+         * @var string|FALSE
+         */
+        $newOrigin = FALSE;
+
+        if (!file_exists($this->dir)) {
+            mkdir($this->dir, 0755, true);
+        }
+
+        /**
+         * Construye la aplicación para su despliegue en producción. Es necesario
+         * que node se encuentre instalado en su computadora.
+         */
+        system("npm run build");
+
+        if (!file_exists($this->param)) {
+
+            do {
+                if ($newOrigin === FALSE) {
+                    $newOrigin = readline("Ingrese el nombre del repositorio remoto (por ejemplo, «origin»: ");
+
+                    if ($newOrigin === FALSE) {
+                        continue;
+                    }
+
+                    break;
+                }
+            } while(true);
+
+            $this->origin = $newOrigin === FALSE ? $this->origin : $newOrigin;
+
+            $data = [
+                "origin" => $this->origin
+            ];
+
+            file_put_contents($this->param, json_encode($data));
+        }
+
+        $data = $this->getParam();
+
+        if (file_exists($this->dist)) {
+            $command = "cd {$this->dist}\n";
+
+            $source = dirname(__FILE__, 2) . "/.gitignore";
+            $target = dirname(__FILE__, 2) . "/dist";
+
+            if (file_exists($source) && file_exists($target)) {
+                copy(dirname(__FILE__, 2) . "/.gitignore", "$target/.gitignore");
+            }
+
+
+            if (!file_exists($this->gitDir)) {
+                $command .= "git init\n";
+            }
+
+            $message = readline("Describa lo que va a enviar: ") ?? "Update";
+
+            $command .= "git add .\n";
+            $command .= "git commit -m \"$message\"\n";
+
+            if (!file_exists($this->gitDir)) {
+                echo "El directorio de git no existe";
+                $command .= "git remote add origin $data->origin\n";
+            }
+
+            $command .= "git push -u origin master\n";
+
+            print_r($command);
+            echo "\n";
+
+            if (file_exists($this->env)) {
+                unlink($this->env);
+            }
+
+            system($command);
+
+
+        }
+    }
+    
+    private function getParam(): object {
+        $data = file_get_contents($this->param);
+        return (object) json_decode($data);
+    }
+}
+
+$deploy = new Deploy();
+
+$deploy->server();
+// init();
+

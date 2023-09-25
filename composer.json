@@ -1,0 +1,44 @@
+{
+    "name": "dlunamontilla/dltools",
+    "description": "Procesar peticiones y realizar consultas a la base de datos",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://aprendiendo.netlify.app/",
+    "autoload": {
+        "psr-4": {
+            "DLTools\\": "src/"
+        },
+        "classmap": [
+            "src/"
+        ]
+    },
+    "authors": [
+        {
+            "name": "David E Luna M",
+            "email": "davidlunamontilla@gmail.com",
+            "homepage": "https://aprendiendo.netlify.app/",
+            "role": "Software Developer"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.0",
+        "phpunit/phpunit": "^9.5",
+        "phpmailer/phpmailer": "^6.7",
+        "enshrined/svg-sanitize": "^0.15.4",
+        "michelf/php-markdown": "^2.0",
+        "league/commonmark": "^2.3",
+        "dlunamontilla/dlroute": "^1.3"
+    },
+    "config": {
+        "optimize-autoloader": true
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --stderr",
+        "configure": "bin/connect-database",
+        "server": "php -S localhost:8000 -t public/"
+    },
+    "bin": [
+        "bin/connect-database"
+    ]
+}

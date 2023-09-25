@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes de prueba</title>
+
+    <style>
+        :root {
+            font-family: "Open Sans", sans-serif, arial;
+            font-size: 15px;
+            color: #fff;
+            background-color: #404040;
+        }
+        span {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        main {
+            width: calc(100% - 30px);
+            margin: 30px auto;
+            max-width: 600px;
+        }
+
+        label {
+            margin-bottom: 20px;
+            display: block;
+            width: 100%;
+        }
+
+        input {
+            height: 40px;
+            padding: 0 10px;
+            width: 100%;
+            font: inherit;
+            color: inherit;
+            background-color: #0008;
+            border: 1px solid #fff3;
+            box-shadow: 0 0 4px #0004;
+            border-radius:4px;
+        }
+
+        button {
+            height: 40px;
+            border: 0;
+            color: inherit;
+            background-color: #0008;
+            padding: 0 10px;
+            border-radius: 5px;
+            font: inherit;
+            cursor: pointer;
+            transition: 300ms ease;
+
+            &:hover {
+                background-color: #0248;
+            }
+
+            &:active {
+                background-color: #0008;
+                transition: none;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <main>
+        <h1>Clientes de prueba</h1>
+    
+        <form action="/see/clients" method="POST">
+            @csrf 
+            <label for="name">
+                <span>Nombre:</span>
+                <input type="text" name="name" id="name" required placeholder="Ingrese un nombre"/>
+            </label>
+    
+            <label for="lastname">
+                <span>Apellidos:</span>
+                <input type="text" name="lastname" id="lastname" required placeholder="Ingrese sus apellidos" />
+            </label>
+    
+            <label for="email">
+                <span>Correo electrónico:</span>
+                <input type="email" name="email" id="email" required placeholder="email@example.com" />
+            </label>
+
+            <div>
+                <button type="submit">Almacenar</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

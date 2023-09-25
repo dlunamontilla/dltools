@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@print('title') - Code Jeran</title>
+
+    @print('styles')
+    
+    <!-- @includes('layouts.styles') -->
+</head>
+<body>
+    <main>
+
+        <!-- @print('includes') -->
+
+        <!-- <pre>@json($db, 'pretty')</pre> -->
+
+        <!-- <pre>@json($_SERVER, 'pretty')</pre> -->
+
+        <!-- 
+            Todo lo que está aquí no se muestra
+        -->
+
+        @php
+            $array = [
+                [
+                    "name" => "Marlon"
+                ],
+
+                [
+                    "name" => "Walter"
+                ]
+            ]
+        @endphp
+
+        <pre>@json($db, 'pretty')</pre>
+
+        @foreach($db as $key => $valor)
+            <h3>{{ $valor['username'] }} {{ $valor['password'] }}</h3>
+        @endforeach
+
+        hr
+    </main>
+
+
+</body>
+</html>

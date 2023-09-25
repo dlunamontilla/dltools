@@ -1,0 +1,307 @@
+#!/usr/bin/env php
+
+<?php
+
+class Configure {
+    private string $production;
+    private string $host;
+    private int $port;
+    private string $user;
+    private string $password;
+    private string $database;
+    private string $charset = "utf8";
+    private string $collation = "utf8_general_ci";
+
+    /**
+     * Prefijo que se usará en la base de datos
+     *
+     * @var string
+     */
+    private string $prefix = "dl";
+
+    /**
+     * Sistema de gestión de base de datos.
+     *
+     * @var string
+     */
+    private string $drive = "mysql";
+
+    /**
+     * Tabla para las pruebas automatizadas.
+     *
+     * @var string
+     */
+    private string $test_table = "tabla";
+
+    /**
+     * Nombre de la base de datos para las pruebas automatizadas.
+     *
+     * @var string
+     */
+    private string $test_database = "dbname";
+
+    /**
+     * Servidor de correo electrónico
+     */
+    private string $mail_host;
+
+    /**
+     * Usuario del correo electrónico
+     */
+    private string $mail_username;
+
+    /**
+     * Contraseña del correo electrónico
+     */
+    private string $mail_password = "";
+
+    /**
+     * Puerto de correo electrónico
+     */
+    private int $mail_port;
+
+    /**
+     * Nombre de la empresa o marca
+     *
+     * @var string
+     */
+    private string $company_name;
+
+    /**
+     * Correo electrónico de contacto
+     */
+    private string $mail_contact;
+
+    public function __construct() {
+    }
+
+    /**
+     * Obtener los datos de la instalación
+     *
+     * @return object
+     */
+    private function getInstallation(): object {
+        do {
+            if (!isset($this->production) || $this->empty($this->production)) {
+                $production = readline("¿Es producción? (opcional) [s|n]: ");
+                $production = strtolower($production);
+
+                if ($production !== "s" && $production !== "n") {
+                    echo "Opción inválida\n";
+                    continue;
+                }
+
+                $is_production = $production === "s"
+                    ? "TRUE"
+                    : "FALSE";
+
+                $this->production = $is_production;
+            }
+
+            if (!isset($this->host) || $this->empty($this->host)) {
+                $host = readline("Host (opcional): ");
+                $this->host = $this->isInput($host) ? $host : "localhost";
+            }
+
+            if (!isset($this->user) || $this->empty($this->user)) {
+                $user = readline("Usuario de la base de datos (opcional): ");
+                $this->user = $this->isInput($user) ? $user : "root";
+            }
+
+            if (!isset($password)) {
+                $password = readline("Ingrese una contraseña (opcional): ");
+                $this->password = $this->isInput($password) ? $password : "";
+            }
+
+            if (!isset($this->port)) {
+                $port = readline("Puerto (opcional): ");
+
+                if (!is_numeric($port) && !empty($port)) {
+                    echo "Puerto inválido\n";
+                    continue;
+                }
+
+                $this->port = $this->isInput($port) ? (int) $port : 3306;
+            }
+
+            if (!isset($this->database) || $this->empty($this->database)) {
+                $database = readline("Base de datos: ");
+
+                if (!$this->isInput($database)) {
+                    continue;
+                }
+
+                $this->database = $database;
+            }
+
+            if (!isset($this->mail_host) || $this->empty($this->mail_host)) {
+                $mail_host = readline("Servidor de correo electrónico: ");
+
+                if (!$this->isInput($mail_host)) {
+                    continue;
+                }
+
+                $this->mail_host = $mail_host;
+            }
+
+            if (!isset($this->mail_username) || $this->empty($this->mail_username)) {
+                $mail_username = readline("Correo electrónico: ");
+
+                if (!$this->isInput($mail_username)) {
+                    continue;
+                }
+
+                $this->mail_username = $mail_username;
+            }
+
+            if (!isset($this->mail_password) || $this->empty($this->mail_password)) {
+                $mail_password = readline("Contraseña de correo: ");
+
+                if (!$this->isInput($mail_password)) {
+                    continue;
+                }
+
+                $this->mail_password = $mail_password;
+            }
+
+            if (!isset($this->mail_port)) {
+                $mail_port = readline("Puerto TCP (email): ");
+
+                if (!is_numeric($mail_port) && !empty($mail_port)) {
+                    echo "Puerto inválido\n\n";
+                    continue;
+                }
+
+                $this->mail_port = $this->isInput($mail_port) ? (int) $mail_port : 465;
+            }
+
+            if (!isset($this->company_name) || $this->empty($this->company_name)) {
+                $company_name = readline("Nombre de su empresa: ");
+
+                if (!$this->isInput($company_name)) {
+                    continue;
+                }
+
+                $this->company_name = (string) $company_name;
+            }
+
+            if (!isset($this->mail_contact) || $this->empty($this->mail_contact)) {
+                $mail_contact = readline("Correo de contacto: ");
+
+                if (!$this->isInput($mail_contact)) {
+                    continue;
+                }
+
+                $this->mail_contact = (string) $mail_contact;
+            }
+
+            break;
+        } while (true);
+
+        return (object) [
+            "production" => $this->production,
+            "host" => $this->host,
+            "user" => $this->user,
+            "password" => $this->password,
+            "database" => $this->database,
+            "port" => $this->port,
+            "charset" => $this->charset,
+            "collation" => $this->collation,
+            "prefix" => $this->prefix,
+            "drive" => $this->drive,
+            "test_table" => $this->test_table,
+            "test_database" => $this->test_database,
+            "mail_host" => $this->mail_host,
+            "mail_username" => $this->mail_username,
+            "mail_password" => $this->mail_password,
+            "mail_port" => $this->mail_port ?? 465,
+            "company_name" => $this->company_name ?? 'CodeJeran',
+            "mail_contact" => $this->company_name ?? 'contact@codejeran.com',
+        ];
+    }
+
+    /**
+     * Verificar si lo que se pasa como argumento está definido
+     * o se encuentra vacío.
+     *
+     * @param string|array $empty
+     * @return boolean
+     */
+    private function empty(string|int|array $empty): bool {
+        $exists = isset($empty);
+        $is_empty = TRUE;
+
+        if (is_array($empty)) {
+            $is_empty = empty($empty);
+        }
+
+        if (is_string($empty)) {
+            $is_empty = empty(trim($empty));
+        }
+
+
+        return !$exists || $is_empty;
+    }
+
+    /**
+     * Verifica si es una entrada válida de usuario
+     *
+     * @param string|false $input
+     * @return boolean
+     */
+    private function isInput(string|false $input): bool {
+        if (is_string($input)) {
+            return !empty(trim($input));
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Configura la conexión la conexión de la base de datos y el servidor
+     * de correo electrónico con el sistema.
+     *
+     * @return boolean
+     */
+    public function config(): bool {
+        $data = $this->getInstallation();
+
+        $config = "DL_PRODUCTION = {$data->production}";
+        $config .= "\r\nDL_DATABASE_HOST = {$data->host}";
+        $config .= "\r\nDL_DATABASE_PORT = {$data->port}";
+        $config .= "\r\nDL_DATABASE_USER = {$data->user}";
+        $config .= "\r\nDL_DATABASE_PASSWORD = {$data->password}";
+        $config .= "\r\nDL_DATABASE_NAME = {$data->database}";
+        $config .= "\r\nDL_DATABASE_CHARSET = {$data->charset}";
+        $config .= "\r\nDL_DATABASE_COLLATION = {$data->collation}";
+        $config .= "\r\nDL_DATABASE_PREFIX = {$data->prefix}";
+        $config .= "\r\nDL_DATABASE_DRIVE = {$data->drive}";
+        $config .= "\r\n\r\n";
+        $config .= "\r\nTEST_TABLE_NAME = {$data->test_table}";
+        $config .= "\r\nTEST_DATABASE_NAME = {$data->test_database}";
+        $config .= "\r\nMAIL_HOST = {$data->mail_host}";
+        $config .= "\r\nMAIL_USERNAME = {$data->mail_username}";
+        $config .= "\r\nMAIL_PASSWORD = {$data->mail_password}";
+        $config .= "\r\nMAIL_PORT = {$data->mail_port}";
+        $config .= "\r\nCOMPANY_NAME = {$data->company_name}";
+        $config .= "\r\nMAIL_CONTACT = {$data->mail_contact}";
+
+        $path = dirname(__DIR__);
+        $filename = "$path/.env";
+
+        if (!is_writable($path)) {
+            echo "Asegúrese que cuente con los permisos necesarios para crear el archivo .env";
+            exit(1);
+        }
+
+        return file_put_contents($filename, $config) !== FALSE;
+    }
+}
+
+
+$install = new Configure;
+$is_it_configured = $install->config();
+
+if ($is_it_configured) {
+    echo "\nSu proyecto se configuró correctamente\n\n";
+}
