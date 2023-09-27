@@ -2,7 +2,12 @@
 
 namespace DLTools\Config;
 
-use DLRoute\Server\DLServer;
+use DLRoute\Requests\DLOutput;
+use Error;
+use ErrorException;
+use Exception;
+use PDO;
+use PDOException;
 
 /**
  * Permitirá capturar todas las variables de entorno.
@@ -14,127 +19,144 @@ use DLRoute\Server\DLServer;
  * @license MIT
  */
 trait DLConfig {
-    /**
-     * Ruta del directorio de trabajo
-     *
-     * @var string|null
-     */
-    private ?string $documentRoot = null;
 
-    /**
-     * Archivo que contiene las credenciales.
-     * 
-     * @var string $path
-     */
-    private string $filename;
-
-    /**
-     * Credenciales definidas en las variables de entorno
-     *
-     * @var array
-     */
-    private array $credentials = [];
-
-    /**
-     * Carga las credenciales a partir de las variables de entorno
-     *
-     * @return void
-     */
-    private function load_credentiales(): void {
-        /**
-         * Directorio raíz de la aplicación.
-         * 
-         * @var string
-         */
-        $root = DLServer::get_document_root();
-
-        $this->filename = "{$root}/.env";
-        
-        if (!file_exists($this->filename)) {
-            echo "<h2>Copie el archivo <code>.env.example</code> en <code>.env</code></h2>\n";
-            exit;
-        }
-    
-        // Se cargan las variables de entorno:
-        $this->credentials = $this->env();
-    }
-
-    /**
-     * Get the filename with full path.
-     * 
-     * @return string
-     */
-    public function get_path(): string {
-        return trim($this->filename);
-    }
-
-    /**
-     * Devuelve las credenciales del archivo .env.
-     * 
-     * @return array
-     */
-    private function env(): array {
-        if (!file_exists($this->filename))
-            return [];
-
-        /**
-         * @var array
-         */
-        $credentials = [];
-
-        // Obtenemos las líneas del archivo:
-        $lines = file($this->filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-        foreach ($lines as $line) {
-            list($name, $value) = explode("=", $line, 2);
-
-            $name = trim($name);
-            $value = trim($value);
-
-            putenv(sprintf("%s=%s", $name, $value));
-
-            $credentials[$name] = $value;
-        }
-
-        return $credentials;
-    }
-
-    /**
-     * Devuelve las credenciales almacenadas en .env
-     * @return object
-     */
-    public function get_credentials(): object {
-        $this->load_credentiales();
-        return (object) $this->credentials;
-    }
+    use DLEnvironment;
 
     /**
      * Establece y obtiene una conexión con el motor de base de datos.
-     * @return \PDO
+     * @return PDO
      */
-    public function get_pdo(): \PDO {
-        $this->load_credentiales();
-        $username = getenv("DL_DATABASE_USER");
-        $password = getenv("DL_DATABASE_PASSWORD");
-        $database = getenv("DL_DATABASE_NAME");
-        $host = getenv("DL_DATABASE_HOST");
-        $drive = getenv("DL_DATABASE_DRIVE");
+    public function get_pdo(): PDO {
 
         /**
+         * Credenciales críticas de conexión al servidor de base de datos.
+         * 
+         * @var Credentials
+         */
+        $credentials = $this->get_credentials();
+
+        /**
+         * Usuario de la base de datos.
+         * 
          * @var string
          */
-        $dsn = "$drive:dbname=$database;host=$host";
-        
+        $username = $credentials->get_username();
+
+        /**
+         * Contraseña de la base de datos.
+         * 
+         * @var string
+         */
+        $password = $credentials->get_password();
+
+        /**
+         * Nombre de la base de datos
+         * 
+         * @var string
+         */
+        $database = $credentials->get_database();
+
+        /**
+         * Servidor de ejecución del motor de base de datos.
+         * 
+         * @var string
+         */
+        $host = $credentials->get_host();
+
+        /**
+         * Motor de base de datos seleccionada.
+         * 
+         * @var string
+         */
+        $drive = $credentials->get_drive();
+
+        /**
+         * Puerto de la base de datos.
+         * 
+         * @var integer
+         */
+        $port = $credentials->get_port();
+
+        /**
+         * Codificación de caracteres de la base de datos.
+         * 
+         * @var string
+         */
+        $charset = $credentials->get_charset();
+
+        /**
+         * Colación de la base de datos.
+         * 
+         * @var string
+         */
+        $collation = $credentials->get_collation();
+
+        /**
+         * DSN de conexión
+         * 
+         * @var string
+         */
+        $dsn = "{$drive}:dbname={$database};host={$host};port={$port};charset={$charset};collation={$collation}";
+
+        $error_mode = PDO::ERRMODE_EXCEPTION;
+
         try {
-            $pdo = new \PDO($dsn, $username, $password);
-            $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
-            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            echo "<h2>" . $e->getMessage() . "</h2>";
-            exit;
+            $pdo = new PDO($dsn, $username, $password, [
+                PDO::ATTR_ERRMODE => $error_mode
+            ]);
+
+            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+            // return $pdo;
+        } catch (PDOException | Error $error) {
+            $this->exception($error);
         }
 
         return $pdo;
+    }
+
+    /**
+     * Devuelve errores personalizados
+     *
+     * @param array|object $data Contenido de error
+     * @return void
+     */
+    protected function exception(PDOException|Exception|Error $error): void {
+        header('Content-Type: application/json; charset=utf8', true, 500);
+
+        /**
+         * Credenciales
+         * 
+         * @var Credentials
+         */
+        $credentials = $this->get_credentials();
+
+        /**
+         * Indica si es modo producción o no.
+         * 
+         * @var boolean
+         */
+        $is_producton = $credentials->is_production();
+
+        /**
+         * Detalles de error
+         * 
+         * @var array
+         */
+        $error = [
+            "status" => false,
+            "error" => "Error en la base de datos",
+            "details" => $error
+        ];
+
+        if ($is_producton) {
+            echo "Error 500";
+            Logs::save('database.json', $error);
+            exit;
+        }
+
+        echo DLOutput::get_json($error, true);
+        exit;
     }
 }

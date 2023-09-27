@@ -17,6 +17,9 @@ cache
 src/descriptors
 *Herramientas
 
+# Logs del sistema
+logs
+
 # Variables de entorno
 .env
 .env*

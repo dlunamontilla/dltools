@@ -4,9 +4,12 @@ namespace DLTools\Test;
 
 use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
+use DLTools\Auth\DLAuth;
 use DLTools\Tests\Category;
+use DLTools\Tests\Contacts;
 use DLTools\Tests\Products;
 use DLTools\Tests\Roles;
+use DLTools\Tests\UsersTest\Users;
 
 final class TestController extends Controller {
 
@@ -54,8 +57,10 @@ final class TestController extends Controller {
      */
     public function get_users(object $params): array {
         new Users;
+        new Products;
 
         return [
+            "products" => Products::paginate(2, 2),
             "users" => Users::get(),
             "count" => Users::count()
         ];
@@ -131,5 +136,28 @@ final class TestController extends Controller {
      */
     public function test_config() {
         $test = Test::get_instance();
+    }
+
+    /**
+     * Realización de pruebas
+     *
+     * @return void
+     */
+    public function users_test(): void {
+        $users = new Users;
+        $users->capture_credentials();
+    }
+
+    public function create_contact(): array {
+        $users = new Contacts;
+
+        $users->contacts_name = $users->get_input('contacts_name');
+        $users->contacts_email = $users->get_input('contacts_email');
+        $users->countries_id = $users->get_input('countries_id');
+        $users->dl_products_ID = $users->get_input('dl_products_ID');
+
+        $users->save();
+
+        return Contacts::get();
     }
 }

@@ -4,6 +4,7 @@ namespace DLTools\Database;
 
 use DLRoute\Requests\DLRequest;
 use DLTools\Config\DLConfig;
+use DLTools\Config\DLValues;
 
 /**
  * Procesa las consultas de las tablas que se encuentran asociadas
@@ -18,6 +19,7 @@ use DLTools\Config\DLConfig;
  */
 abstract class Model {
 
+    use DLValues;
     use DLConfig;
 
     /**
@@ -35,11 +37,11 @@ abstract class Model {
     private array $fields = [];
 
     /**
-     * Valores de los parámetros de la petición, incluyendo, formato JSON
-     *
-     * @var array
+     * Base de datos.
+     * 
+     * @var DLDatabase $db
      */
-    private array $values = [];
+    private static ?DLDatabase $db = null;
 
     public function __construct() {
         $classname = get_class($this);
@@ -51,7 +53,7 @@ abstract class Model {
          * @var DLRequest
          */
         $request = DLRequest::get_instance();
-        
+
         /**
          * Entradas del usuario
          * 
@@ -62,6 +64,8 @@ abstract class Model {
         if (is_array($values)) {
             $this->values = $values;
         }
+
+        static::$db = DLDatabase::get_instance();
     }
 
     /**
@@ -159,7 +163,7 @@ abstract class Model {
 
         $table = "{$prefix}{$table}";
 
-        self::$table = $table;
+        static::$table = $table;
     }
 
     /**
@@ -169,13 +173,6 @@ abstract class Model {
      */
     private function get_prefix(): string {
         /**
-         * Prefijo que se usará en las tablas.
-         * 
-         * @var string
-         */
-        $prefix = "";
-
-        /**
          * Devuelve las credenciales a partir de las variables de entorno.
          * 
          * @var object
@@ -183,15 +180,11 @@ abstract class Model {
         $credentials = $this->get_credentials();
 
         /**
-         * Indicador de existencia de prefijos.
+         * Prefijo que se usará en las tablas.
          * 
-         * @var boolean
+         * @var string
          */
-        $prefix_exists = isset($credentials->DL_PREFIX) && is_string($credentials->DL_PREFIX);
-
-        if ($prefix_exists) {
-            $prefix = $credentials->DL_PREFIX;
-        }
+        $prefix = $credentials->get_prefix();
 
         return trim($prefix);
     }
@@ -216,7 +209,7 @@ abstract class Model {
          * 
          * @var array
          */
-        $data = $db->from(static::$table)->select(...$fields)->get();
+        $data = $db->from(static::$table)->select(...$fields)->limit(100)->get();
 
         return $data;
     }
@@ -347,24 +340,85 @@ abstract class Model {
     }
 
     /**
-     * Devuelve el valor de un campo seleccionado.
+     * Ordena por columnas
      *
-     * @param string $name Campo seleccionado por el usuario
-     * @return string
+     * @param string ...$column Columnas
+     * @return DLDatabase
      */
-    public function get_input(string $name): mixed {
+    public static function order_by(string ...$column): DLDatabase {
+        return static::$db->from(static::$table)->order_by(...$column);
+    }
 
-        if (!array_key_exists($name, $this->values)) {
-            return null;
+    /**
+     * Estable el un sistema de paginación en el modelo
+     *
+     * @param integer $page Número de página
+     * @param integer|null $rows Número de registros por páginas
+     * @return array
+     */
+    public static function paginate(int $page = 1, int $rows = 100): array {
+
+        if ($page < 1) {
+            static::error("\$page debe ser mayor que cero (0)");
+        }
+
+        if ($rows < 1) {
+            static::error("\$rows debe ser mayor que cero (0)");
         }
 
         /**
-         * Entrada del usuario.
+         * Identifica la cantidad de registros existentes.
          * 
-         * @var mixed
+         * @var integer $quantity
          */
-        $value = $this->values[$name] ?? null;
+        $quantity = static::count();
+        
+        /**
+         * Cantidad de registro de comienzo.
+         * 
+         * @var int
+         */
+        $start = $rows * ($page - 1);
 
-        return $value;
+        /**
+         * Número de paginas calculadas en función de la cantidad registros en la tabla
+         * divida por la cantidad de registros por página (`$rows`).
+         * 
+         * @var integer
+         */
+        $pages = ceil($quantity / $rows);
+
+        /**
+         * Registro de la consulta.
+         * 
+         * @var array
+         */
+        $register = [];
+
+        if ($quantity > 0) {
+            $register = static::$db->from(static::$table)->limit($start, $rows)->get();
+        }
+
+        if ($quantity <= 0) {
+            $pages = 0;
+            $rows = 0;
+            $page = 1;
+        }
+
+        /**
+         * Datos de la consulta.
+         * 
+         * @var array $data
+         */
+        $data = [
+            "pages" => $pages,
+            "page" => $page,
+            "pagination" => "{$page} de {$pages}",
+            "rows" => $rows,
+
+            "register" => $register
+        ];
+
+        return $data;
     }
 }

@@ -69,29 +69,40 @@ trait DLEnvironment {
      */
     protected function parse_file(): void {
         /**
-         * Contenido de la variable de entorno.
+         * Indica si contiene variables de entorno.
          * 
-         * @var string|null
+         * @var boolean
          */
-        $content = $this->get_env();
+        $contains_environment = !empty(
+            $this->get_environments()
+        );
 
-        $this->remove_comments($content);
-
-        /**
-         * Líneas
-         * 
-         * @var string[]
-         */
-        $lines = explode("\n", $content);
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-
-            if (empty($line)) {
-                continue;
+        if (!$contains_environment) {
+            /**
+             * Contenido de la variable de entorno.
+             * 
+             * @var string|null
+             */
+            $content = $this->get_env();
+    
+            $this->remove_comments($content);
+    
+            /**
+             * Líneas
+             * 
+             * @var string[]
+             */
+            $lines = explode("\n", $content);
+    
+            foreach ($lines as $line) {
+                $line = trim($line);
+    
+                if (empty($line)) {
+                    continue;
+                }
+    
+                $this->parse_line($line);
             }
-
-            $this->parse_line($line);
         }
 
         /**
@@ -255,18 +266,18 @@ trait DLEnvironment {
         $pattern_type = "/^[a-z]+$/";
 
         if (!preg_match($pattern_varname, $var)) {
-            $this->error("El formato de la variable {$var} es inválido");
+            static::error("El formato de la variable {$var} es inválido");
         }
 
         if (!preg_match($pattern_type, $type)) {
-            $this->error("Formato de tipo «{$type}» es inválido");
+            static::error("Formato de tipo «{$type}» es inválido");
         }
 
         $type = strtolower($type);
 
         if (!in_array($type, self::$types)) {
             $type = strtoupper($type);
-            $this->error("Tipo de datos desconocido. Tipo desconocido {$type}");
+            static::error("Tipo de datos desconocido. Tipo desconocido {$type}");
         }
 
         return (object) [
@@ -315,7 +326,7 @@ trait DLEnvironment {
         $method_name = "is_{$type}";
 
         if (!method_exists($this, $method_name)) {
-            $this->error("Tipo desconocido: «{$type}»");
+            static::error("Tipo desconocido: «{$type}»");
         }
 
         /**
@@ -357,7 +368,7 @@ trait DLEnvironment {
      * @param string $message Mensaje personalizado
      * @return void
      */
-    private function error(string $message): void {
+    private static function error(string $message): void {
         header("Content-Type: application/json; charset=utf-8", true, 500);
 
         echo DLOutput::get_json([

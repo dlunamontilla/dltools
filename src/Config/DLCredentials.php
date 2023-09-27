@@ -115,7 +115,20 @@ trait DLCredentials {
      * @return Credentials
      */
     protected function get_credentials(): Credentials {
-        return new Credentials(
+        /**
+         * Veritica primero si está vacía las variables de entorno.
+         * 
+         * @var boolean
+         */
+        $is_empty = empty(
+            $this->get_environments()
+        );
+
+        if ($is_empty) {
+            $this->parse_file();
+        }
+
+        return Credentials::get_instance(
             $this->get_environments_as_object()
         );
     }

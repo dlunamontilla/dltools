@@ -18,7 +18,7 @@ class AuthTest extends Testcase {
      * @return void
      */
     public function setup(): void {
-        $this->auth = new DLAuth;
+        $this->auth = DLAuth::get_instance();
     }
 
     public function testAuth(): void {

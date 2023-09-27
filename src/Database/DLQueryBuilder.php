@@ -42,5 +42,4 @@ trait DLQueryBuilder {
 
         return $this;
     }
-
 }

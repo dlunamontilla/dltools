@@ -1,4 +1,6 @@
 <?php
+use DLTools\Auth\DLAuth;
+use DLTools\Auth\DLUser;
 ini_set('display_errors', 1);
 
 /**
@@ -104,5 +106,14 @@ DLRoute::post('/product/create', [TestController::class, 'create_product']);
 
 # Probando las variables de Entorno
 DLRoute::get('/vars', [TestController::class, 'test_config']);
+
+# Probando el sistema de autenticación
+
+$auth = DLAuth::get_instance();
+
+DLRoute::post('/user/test', [TestController::class, 'users_test']);
+
+
+
 
 DLRoute::execute();

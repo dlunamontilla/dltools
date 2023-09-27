@@ -2,124 +2,116 @@
 
 namespace DLTools\Auth;
 
+use DLTools\Database\Model;
+
 /**
- * Permite establecer los campos del formulario. Por defecto ya 
- * tiene unos campos prestablecidos cuando no se hayan definido.
+ * Procesa el usuario.
  * 
- * @package DLTools
+ * @package DLTools\Auth
  * 
+ * @version 1.0.0 (release)
  * @author David E Luna M <davidlunamontilla@gmail.com>
+ * @copyright 2023 David E Luna M
  * @license MIT
- * @version v1.0.0
  */
-class DLUser {
-    /**
-     * Nombre del campo de usuario
-     *
-     * @var string
-     */
-    private string $usernameField = "";
+abstract class DLUser extends Model {
 
     /**
-     * Nombre del campo de contraseña.
+     * Token de usuario
      *
-     * @var string
+     * @var string|null
      */
-    private string $passwordField = "";
+    private ?string $token_user = null;
 
     /**
-     * Nombre de la tabla de usuarios
+     * Usuario de la aplicación
      *
-     * @var string
+     * @var string|null
      */
-    private string $usersTable = "";
+    private ?string $username = null;
 
     /**
-     * Nombre del campo de correo electrónico.
+     * Contraseña de la aplicación.
      *
-     * @var string
+     * @var string|null
      */
-    private string $emailNameField = "";
+    private ?string $password_hash = null;
 
     /**
-     * Nombre de la tabla donde se almacenan los token de sessión
+     * Devuelve el token del usuario
      *
-     * @var string
+     * @return string|null
      */
-    private string $sessionTable = "";
-
-    /**
-     * Nombre del campo donde se almacena el token de la sesión.
-     *
-     * @var string
-     */
-    private string $tokenName = "";
-
-    /**
-     * Nombre del campo ID de la tabla de usuarios.
-     *
-     * @var string
-     */
-    private string $IdName = "";
-
-    /**
-     * Nombre del campo oculto del formulario que terminará
-     * la sesión del usuario.
-     *
-     * @var string
-     */
-    private string $logoutField = "";
-
-    /**
-     * Array par `clave => valor` para permitir cambiar el nombre de las
-     * tablas de usuario y sessión en el caso de ser necesario. En el caso de que no se
-     * definan los valores por defectos serán:
-     * 
-     * ```
-     * $user = [
-     *  'usernameField' => 'username',
-     *  'passwordField' => 'password',
-     *  'usersTable' => 'users',
-     *  'emailNameField' => 'email',
-     *  'sessionTable' => 'session',
-     *  'tokenName' => 'token'
-     * ]
-     * ```
-     * 
-     * Donde el valor es el nombre del campo o la tabla. No importa en qué orden
-     * lo coloque. La clase `DLUser` solamente tomará los valores que haya definido.
-     *
-     * @param array $user
-     */
-    public function __construct(array $user = []) {
-        $options = (object) $user;
-
-        $this->usernameField = $options->usernameField ?? 'username';
-        $this->passwordField = $options->passwordField ?? 'password';
-        $this->usersTable = $options->usersTable ?? 'users';
-        $this->emailNameField = $options->emailNameField ?? 'email';
-        $this->sessionTable = $options->sessionTable ?? 'session';
-        $this->tokenName = $options->tokenName ?? 'token';
-        $this->IdName = $options->IdName ?? 'ID';
-        $this->logoutField = $options->logoutField ?? 'logout';
+    public function get_token(): ?string {
+        return $this->token_user;
     }
 
     /**
-     * Devuelve en un objeto los nombres de los campos de la tabla de usuario. 
-     * En este caso, los campos obligatorio y/o principales.
+     * Establece el token de autenticación del usuario
      *
-     * @return object
+     * @param string $token
+     * @return void
      */
-    public function get_credentials_fields(): object {
-        return (object) [
-            "IdName" => $this->IdName,
-            "usernameField" => $this->usernameField,
-            "passwordField" => $this->passwordField,
-            "emailNameField" => $this->emailNameField,
-            "usersTable" => $this->usersTable,
-            "sessionTable" => $this->sessionTable,
-            "tokenName" => $this->tokenName,
-            "logoutField" => $this->logoutField
-        ];
+    public function set_token_user(string $token): void {
+        $this->token_user = $token;
     }
+
+    /**
+     * Establece el nombre de usuario de la aplicación.
+     *
+     * @param string $username Nombre de usuario
+     * @return void
+     */
+    protected function set_username(string $username): void {
+        $this->username = trim($username);
+    }
+
+    /**
+     * Establece la contraseña enviada por el usuario
+     *
+     * @param string $password
+     * @return void
+     */
+    protected function set_password(string $password): void {
+        $this->password = trim($password);
+    }
+
+    /**
+     * Establece el hash de la contraseña almacenada en la base de datos
+     *
+     * @param string $password_hash
+     * @return void
+     */
+    public function set_password_hash(string $password_hash): void {
+        $this->password_hash = $password_hash;
+    }
+
+    /**
+     * Devuelve el usuario de la aplicación
+     *
+     * @return string|null
+     */
+    public function get_username(): ?string {
+        return $this->username;
+    }
+
+    /**
+     * Devuelve el hash de la contraseña
+     *
+     * @return string|null
+     */
+    public function get_password_hash(): ?string {
+        return $this->password_hash;
+    }
+
+    /**
+     * Devuelve la contraseña enviada por el usuario
+     *
+     * @return string|null
+     */
+    public function get_password(): ?string {
+        return $this->password;
+    }
+
+
 }

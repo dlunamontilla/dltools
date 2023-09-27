@@ -18,6 +18,12 @@ use DLTools\Interfaces\CredentialsInterface;
 final class Credentials implements CredentialsInterface {
 
     /**
+     * Instancia de clase
+     *
+     * @var self|null
+     */
+    private static ?self $instance = null;
+    /**
      * Indica si la aplicación debe correr en modo producción o desarrollo. Si vale
      * `true` la aplicación debe correr en modo producción.
      *
@@ -138,7 +144,7 @@ final class Credentials implements CredentialsInterface {
     /**
      * Debe pasar las credenciales como argumento
      */
-    public function __construct(object $credentials) {
+    private function __construct(object $credentials) {
         $this->credentials = $credentials;
         $this->load_credentiales();
     }
@@ -313,5 +319,13 @@ final class Credentials implements CredentialsInterface {
 
     public function get_mail_contact(): string {
         return $this->mail_contact;
+    }
+
+    public static function get_instance(object $credentials): self {
+        if (!(self::$instance instanceof self)) {
+            self::$instance = new self($credentials);
+        }
+
+        return self::$instance;
     }
 }

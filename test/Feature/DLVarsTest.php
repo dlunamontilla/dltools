@@ -7,7 +7,8 @@ use PHPUnit\Framework\TestCase;
 class DLVarsTest extends TestCase {
 
     use DLEnvironment;
-    private ?Credentials $dlvars = null;
+
+    private ?Credentials $credentials = null;
 
     /**
      * @before
@@ -15,11 +16,7 @@ class DLVarsTest extends TestCase {
      * @return void
      */
     public function setup(): void {
-        $this->parse_file();
-
-        $vars = $this->get_environments_as_object();
-
-        $this->dlvars = new Credentials($vars);
+        $this->credentials = $this->get_credentials();
     }
 
     /**
@@ -28,7 +25,7 @@ class DLVarsTest extends TestCase {
      * @return void
      */
     public function test_production(): void {
-        $value = $this->dlvars->is_production();
+        $value = $this->credentials->is_production();
         $this->assertIsBool($value);
     }
 
@@ -38,7 +35,7 @@ class DLVarsTest extends TestCase {
      * @return void
      */
     public function test_database_host(): void {
-        $value = $this->dlvars->get_host();
+        $value = $this->credentials->get_host();
         $this->assertIsString($value);
     }
 
@@ -48,7 +45,12 @@ class DLVarsTest extends TestCase {
      * @return void
      */
     public function test_databse_port(): void {
-        $value = $this->dlvars->get_port();
+        $value = $this->credentials->get_port();
+        $this->assertIsInt($value);
+    }
+
+    public function test_mail_port(): void {
+        $value = $this->credentials->get_mail_port();
         $this->assertIsInt($value);
     }
 }

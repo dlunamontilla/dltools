@@ -4,6 +4,10 @@ namespace DLTools\Database;
 
 use DLTools\Config\DLConfig;
 use Error;
+use Exception;
+use PDO;
+use PDOException;
+use PDOStatement;
 use phpDocumentor\Reflection\PseudoTypes\LowercaseString;
 
 /**
@@ -23,10 +27,10 @@ use phpDocumentor\Reflection\PseudoTypes\LowercaseString;
 
 class DLDatabase {
 
+    use DLConfig;
     use DLDatabaseProperties;
     use DLQueryBuilder;
-    use DLConfig;
-    
+
     private static ?self $instance = NULL;
 
     private function __construct() {
@@ -87,49 +91,63 @@ class DLDatabase {
      * @return string|bool
      */
     public function update(array $fields, bool $test = false): string | bool {
-        if ($this->empty($fields)) {
-            throw new Error("Especifique los campos a modificar\n<br>");
-        }
+        /**
+         * Indicador de si se ha completado el proceso de actualización.
+         * 
+         * @var boolean
+         */
+        $completed = false;
 
-        if ($this->empty($this->table)) {
-            throw new Error("Debe seleccionar la tabla que desea modificar");
-        }
-
-        $this->set_options();
-
-        $newFields = [];
-        $params = [];
-
-        foreach($fields as $field => $value) {
-            $key = ":" . $field;
-
-            
-            if (array_key_exists($key, $this->param)) {
-                array_push($newFields, "{$field} = {$key}_v");
-                $this->param[$key . "_v"] = $value;
-
-                continue;
+        try {
+            if ($this->empty($fields)) {
+                throw new Error("Especifique los campos a modificar\n<br>");
             }
-            
-            array_push($newFields, "{$field} = {$key}");
-            $this->param[$key] = $value;
+
+            if ($this->empty($this->table)) {
+                throw new Error("Debe seleccionar la tabla que desea modificar");
+            }
+
+            $this->set_options();
+
+            $newFields = [];
+            $params = [];
+
+            foreach ($fields as $field => $value) {
+                $key = ":" . $field;
+
+
+                if (array_key_exists($key, $this->param)) {
+                    array_push($newFields, "{$field} = {$key}_v");
+                    $this->param[$key . "_v"] = $value;
+
+                    continue;
+                }
+
+                array_push($newFields, "{$field} = {$key}");
+                $this->param[$key] = $value;
+            }
+
+            $params = $this->param;
+            $query = "UPDATE {$this->table} SET " . join(", ", $newFields);
+
+            if (!($this->empty($this->options))) {
+                $query .= $this->options;
+            }
+
+            $this->clean();
+
+            if ($test) {
+                return $query;
+            }
+
+            $stmt = $this->pdo->prepare($query);
+
+            $completed = $stmt->execute($params);
+        } catch (PDOException | Error $error) {
+            $this->exception($error);
         }
-        
-        $params = $this->param;
-        $query = "UPDATE {$this->table} SET " . join(", ", $newFields);
 
-        if (!($this->empty($this->options))) {
-            $query .= $this->options;
-        }
-
-        $this->clean();
-
-        if ($test) {
-            return $query;
-        }
-
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute($params);
+        return $completed;
     }
 
     /**
@@ -139,19 +157,32 @@ class DLDatabase {
      * @return void
      */
     public function delete(bool $test = false): string | bool {
-        $this->delete = "DELETE";
+        /**
+         * Indica si el proceso se ha completado.
+         * 
+         * @var boolean
+         */
+        $completed = false;
 
-        $query = $this->get_query();
-        $param = $this->param;
+        try {
+            $this->delete = "DELETE";
 
-        $this->clean();
+            $query = $this->get_query();
+            $param = $this->param;
 
-        if ($test) {
-            return $query;
+            $this->clean();
+
+            if ($test) {
+                return $query;
+            }
+
+            $stmt = $this->pdo->prepare($query);
+            $completed = $stmt->execute($param);
+        } catch (PDOException $error) {
+            $this->exception($error);
         }
 
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute($param);
+        return $completed;
     }
 
     public function from(string $table): self {
@@ -172,48 +203,74 @@ class DLDatabase {
      * @return array
      */
     public function get(array $param = []): array {
-        if (!$this->custom) {
-            $this->get_query();
+        /**
+         * Datos de la consulta
+         * 
+         * @var array
+         */
+        $data = [];
+
+        try {
+            if (!$this->custom) {
+                $this->get_query();
+            }
+
+            if ($this->custom) {
+                $this->param = $param;
+            }
+
+            if ($this->empty($this->query)) {
+                $this->select();
+            }
+
+            $stmt = $this->pdo->prepare($this->query);
+            $stmt->execute($this->param);
+
+            $this->clean();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException | Error $error) {
+            $this->exception($error);
         }
 
-        if ($this->custom) {
-            $this->param = $param;
-        }
-
-        if ($this->empty($this->query)) {
-            $this->select();
-        }
-
-        $stmt = $this->pdo->prepare($this->query);
-        $stmt->execute($this->param);
-
-        $this->clean();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $data;
     }
 
+    /**
+     * Devuelve el primero registro de la tabla
+     *
+     * @param array $param Parámetros de la consulta.
+     * @return array
+     */
     public function first(array $param = []): array {
-        if (!$this->custom) {
-            $this->get_query();
+        $data = [];
+
+        try {
+            if (!$this->custom) {
+                $this->get_query();
+            }
+
+            if ($this->custom) {
+                $this->param = $param;
+            }
+
+            if ($this->empty($this->query)) {
+                $this->select();
+            }
+
+            if ($this->empty($this->query)) {
+                throw new Error("La consulta SQL no puede estar vacía");
+            }
+
+            $stmt = $this->pdo->prepare($this->query);
+            $stmt->execute($this->param);
+
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $this->clean();
+        } catch (PDOException $error) {
+            $this->exception($error);
         }
 
-        if ($this->custom) {
-            $this->param = $param;
-        }
-
-        if ($this->empty($this->query)) {
-            $this->select();
-        }
-
-        if ($this->empty($this->query)) {
-            throw new Error("La consulta SQL no puede estar vacía");
-        }
-
-        $stmt = $this->pdo->prepare($this->query);
-        $stmt->execute($this->param);
-
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        $this->clean();
         return $data !== FALSE
             ? $data
             : [];
@@ -542,7 +599,7 @@ class DLDatabase {
     public function count(string $column = "*", bool $test = false): string | array {
         $column = trim($column);
         $columnName = $column !== "*" ? $column : 'count';
-        
+
         if ($this->empty($this->table)) {
             throw new Error("Debe seleccionar una tabla primero\n<br>");
         }
