@@ -3,8 +3,6 @@
 namespace DLTools\Compilers;
 
 use DLRoute\Server\DLServer;
-use DLTools\Config\DLRealPath;
-
 
 /**
  * Parsea las plantillas ubicadas en el directorio `resources` con
@@ -25,16 +23,7 @@ class DLView {
      */
     private static ?self $instance = NULL;
 
-    /**
-     * Ruta raíz del proyecto
-     *
-     * @var string $documentRoot
-     */
-    private static string $documentRoot;
-
     private function __construct() {
-        $objectPath = DLRealPath::getInstance();
-        self::$documentRoot = $objectPath->getDocumentRoot();
     }
 
     public static function getInstance(): self {
@@ -58,7 +47,7 @@ class DLView {
          * @var string
          */
         $root = DLServer::get_document_root();
-        
+
         /**
          * Archivo de plantillas.
          * 
@@ -105,13 +94,15 @@ class DLView {
      * @return void
      */
     public static function load(string $view, array $data = []): void {
+        $root = DLServer::get_document_root();
+
         $view = preg_replace("/\./", DIRECTORY_SEPARATOR, $view);
-        
+
         $stringTemplate = self::template($view);
-        
+
         $filename = base64_encode($view) . ".php";
 
-        foreach($data as $key => $variable) {
+        foreach ($data as $key => $variable) {
             ${$key} = $variable;
         }
 
@@ -120,7 +111,7 @@ class DLView {
          * 
          * @var string $cacheDir
          */
-        $cacheDir = self::$documentRoot . "/cache";
+        $cacheDir = "{$root}/cache";
 
         if (!file_exists($cacheDir)) {
             mkdir($cacheDir, 0755, true);
@@ -131,10 +122,10 @@ class DLView {
         if (!file_exists($filename)) {
             file_put_contents($filename, $stringTemplate);
         }
-    
+
         $hashFile = hash_file('sha1', $filename);
         $hashView = hash('sha1', $stringTemplate);
-    
+
         if ($hashFile !== $hashView) {
             file_put_contents($filename, $stringTemplate);
         }

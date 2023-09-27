@@ -2,7 +2,7 @@
 
 namespace DLTools\Compilers;
 
-use DLTools\Config\DLRealPath;
+use DLRoute\Server\DLServer;
 
 /**
  * Permite parsear archivos Markdown con la ayuda de una 
@@ -22,15 +22,7 @@ class DLMarkdown {
      */
     private ?self $instance = NULL;
 
-    /**
-     * Directorio raíz del proyecto
-     *
-     * @var string
-     */
-    private static string $documentRoot;
     private function __construct() {
-        $realpath = DLRealPath::getInstance();
-        self::$documentRoot = $realpath->getDocumentRoot();
     }
 
     /**
@@ -54,6 +46,8 @@ class DLMarkdown {
      * @return string
      */
     public static function parse(string $view): string {
+        $root = DLServer::get_document_root();
+
         $pattern = "/\./";
         $markdown = "";
 
@@ -67,7 +61,7 @@ class DLMarkdown {
          * 
          * @var string $filename
          */
-        $filename = self::$documentRoot. "/resources/{$view}.md";
+        $filename = "{$root}/resources/{$view}.md";
 
         if (!file_exists($filename)) {
             return $markdown;

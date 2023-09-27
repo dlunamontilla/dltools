@@ -106,14 +106,12 @@ DLRoute::post('/product/create', [TestController::class, 'create_product']);
 # Probando las variables de Entorno
 DLRoute::get('/vars', [TestController::class, 'test_config']);
 
-# Probando el sistema de autenticación
-
-$auth = DLAuth::get_instance();
-
 DLRoute::post('/user/test', [TestController::class, 'users_test']);
 
-
+# Envío de correos electrónicos:
 DLRoute::post('/mail', [TestController::class, 'mail']);
 
+# Prueba con la plantillas
+DLRoute::get('/template', [TestController::class, 'template']);
 
 DLRoute::execute();

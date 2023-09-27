@@ -4,7 +4,9 @@ namespace DLTools\Test;
 
 use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
+use DLRoute\Server\DLServer;
 use DLTools\Auth\DLAuth;
+use DLTools\Compilers\DLView;
 use DLTools\HttpRequest\SendMail;
 use DLTools\Tests\Category;
 use DLTools\Tests\Contacts;
@@ -167,7 +169,7 @@ final class TestController extends Controller {
     }
 
     /**
-     * Envío de correos electrónicos
+     * Envío de correos electrónicos de prueba
      *
      * @return array
      */
@@ -178,5 +180,23 @@ final class TestController extends Controller {
             $email->get_email('email'),
             $email->get_required('body')
         );
+    }
+
+    public function template(): string {
+
+        ob_start();
+        DLView::load('test', [
+            'authenticted' => true,
+            "files" => [],
+            "uploads" => [],
+            "info" => "Test",
+            "query" => "query",
+            "isValid" => false,
+            "basedir" => DLServer::get_document_root(),
+            "username" => "Usuario de prueba"
+        ]);
+        $view = ob_get_clean();
+
+        return $view;
     }
 }

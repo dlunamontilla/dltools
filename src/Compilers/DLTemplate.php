@@ -3,8 +3,6 @@
 namespace DLTools\Compilers;
 
 use DLTools\Auth\DLAuth;
-use DLTools\Config\DLRealPath;
-
 
 
 /**
@@ -25,7 +23,6 @@ class DLTemplate {
     private static ?self $instance = NULL;
 
     private function __construct() {
-        
     }
 
     /**
@@ -418,7 +415,7 @@ class DLTemplate {
     public static function parseComments(string $stringTemplate): string {
         $pattern = "/\{\{\-\-([\s\S]*?)\-\-\}\}/";
         $stringTemplate = preg_replace($pattern, "", $stringTemplate);
-        
+
         $pattern = "/<\!\-\-([\s\S]*?)\-\->/";
         $stringTemplate = preg_replace($pattern, "", $stringTemplate);
 
@@ -435,7 +432,7 @@ class DLTemplate {
     private static function parseToken(string $stringTemplate): string {
         $pattern = "/@csrf/";
 
-        $auth = new DLAuth;
+        $auth = DLAuth::get_instance();
         $token = $auth->get_token();
 
         $replace = "<input type=\"hidden\" name=\"csrf-token\" id=\"csrf-token\" value=\"$token\" />";
