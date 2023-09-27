@@ -193,7 +193,8 @@ final class TestController extends Controller {
             "query" => "query",
             "isValid" => false,
             "basedir" => DLServer::get_document_root(),
-            "username" => "Usuario de prueba"
+            "username" => "Usuario de prueba",
+            "token" => "Token"
         ]);
         $view = ob_get_clean();
 

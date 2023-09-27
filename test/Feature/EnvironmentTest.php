@@ -2,8 +2,7 @@
 
 use DLTools\Config\DLEnvironment;
 use PHPUnit\Framework\TestCase;
-
-class Environment extends TestCase {
+class EnvironmentTest extends TestCase {
 
     use DLEnvironment;
 

@@ -1,9 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use DLTools\Models\Authenticate;
 
-class EnvironmentTest extends TestCase {
+class AuthenticateTest extends TestCase {
 
    /**
     * @test
