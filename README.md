@@ -1,76 +1,198 @@
-# DLTools
+# Herramienta DLTools para DLUnire
 
-> **IMPORTANTE:** Todavía no se han documentado todas las clases de DLTools, porque no se han implementado todas las funciones hasta el momento. Se está desarrollando y se estará actualizando las documentaciones en tiempo real.
->
-> Se está preparando la biblioteca para que pueda ser utilizable. Incluye actualización de la documentación.
+## Instalación
 
----
+Para instalar `dlunamontilla/dltools` debe escribir el siguiente comando:
 
-Para instalar esta herramienta escriba la siguiente línea en un terminal:
-
-```bash
+```zsh
 composer require dlunamontilla/dltools
 ```
 
-Y luego, en su archivo index.php, escriba la siguiente línea:
+> **Importante:** debe tener instalado previamente _composer_ para poder instalar esta herramienta. Si desea instalar _composer_ [visite su sitio Web oficial](https://getcomposer.org "Administrador de dependencia de PHP") y siga las instrucciones.
 
-```php
-require_once __DIR__ . '/vendor/autoload.php';
+## Características
+
+Esta herramienta cuenta con lo siguiente:
+
+- Constructor de consultas.
+- Modelo.
+- Lectura de variables de entorno con tipado estático, a la vez, que permite la lectura de las variables de entorno si archivos de variables de entorno.
+
+Para establecer variables de entorno para autenticar su aplicación con el motor de base de datos, cree un archivo con el nombre `.env.type` y coloque las siguientes líneas:
+
+```envtype
+# Indica si la aplicación debe correr o no en producción:
+DL_PRODUCTION: boolean = false
+
+# Servidor de la base de datos:
+DL_DATABASE_HOST: string = "localhost"
+
+# Puerto del motor de la base de datos:
+DL_DATABASE_PORT: integer = 3306
+
+# Usuario de la base de datos:
+DL_DATABASE_USER: string = "tu-usuario"
+
+# Contraseña de la base de datos:
+DL_DATABASE_PASSWORD: string = "tu-contraseña"
+
+# Nombre de la base de datos:
+DL_DATABASE_NAME: string = "tu-base-de-datos"
+
+# Codificación de caracteres de la base de datos. Si no se define, 
+# entonces, el valor por defecto serà `utf8`:
+DL_DATABASE_CHARSET: string = "utf8"
+
+# Colación del motor de base de datos. Si no se define, el valor por
+# defecto será `utf8_general_ci`:
+DL_DATABASE_COLLATION: string = "utf8_general_ci"
+
+# Motor de base de datos. Si no se define esta variable, el valor
+# por defecto será `mysql`:
+DL_DATABASE_DRIVE: string = "mysql"
 ```
 
-O si está en `public_html/`, simplemente escriba dentro del archivo `index.php` la siguiente línea:
+Si además, necesita enviar correos electrónicos, pegue las siguientes líneas:
+
+```envtype
+# Usuario de correo electrónico. Tome en cuenta que no debe colocar
+# comillas de ningún tipo, porque no se evaluaría si es un correo:
+MAIL_USERNAME: email = no-reply@example.com
+
+# Contraseña del correo electrónico:
+MAIL_PASSWORD: string = "Contraseña de correo"
+
+# Puerto del servidor SMTP con certificado SSL para tu correo 
+# electrónico:
+MAIL_PORT: integer = 465
+
+# Nombre de la empresa que envía el correo a través de su web
+# o aplicación:
+MAIL_COMPANY_NAME: string = "Empresa, marca o tu marca personal"
+
+# Correo de contacto:
+MAIL_CONTACT: email = contact@example.com
+```
+
+> **Importante:** para el resaltado de sintaxis, instale **[DL Typed Environment](https://marketplace.visualstudio.com/items?itemName=dlunamontilla.envtype "DL Typed Environment")**
+
+Si desea instalar las _API Key_ de Google para instalar un `reCAPTCHA` puede agregar las siguientes líneas en el archivo `.env.type`:
+
+```entype
+# Estas variables son opcionales. Si desea establecer un reCAPTCHA
+# de Google, puedes definirlas aquí:
+G_SECRET_KEY: string = "<tu-llave-privada>"
+G_SITE_KEY: string = "<tu-llave-del-sitio>"
+```
+
+## Uso de la herramienta
+
+### Modelos
+
+Si desea crear una clase extendendida en un modelo, debe escribir las siguientes líneas:
 
 ```php
+
 <?php
-require_once dirname(__DIR__, 1) . '/vendor/autoload.php';
+
+namespace TuApp\Models;
+
+use DLTools\Database\Model;
+
+class Products extends Model {}
 ```
 
-Una vez hecho lo anterior, puede usar cualquiera de las clases de DLTools en su aplicación.
+Donde `Products` es la clase que hace referencia a la tabla `products`. Si las tablas de la aplicación usa prefijos, por ejemplo, `wp_`, entonces, deberá definir el prefijo en el archivo `.env.type`:
 
-Por ejemplo, si va a utilizar la clase `Database` solo tiene que escribir la siguiente línea:
+```envtype
+DL_PREFIX: string = "wp_"
+```
+
+O si la variable de entorno que ha definido no usa ningún tipo de archivo, asegúrese definirla en su proveedor de hosting (por ejemplo, Heroku), debe tener este nombre de variable:
+
+```none
+DL_PREFIX = "wp_"
+```
+
+Si en el modelo `Products` desea establecer un nombre de tabla diferente, solo tiene que definirla así:
 
 ```php
-use DLTools\Models\Database;
-$db = new Database;
+class Products extends Model {
 
-$data = $db
-    ->query('SELECT * FROM users WHERE id = :id')
-    ->get([':id' => 1]);
-
-print_r($data);
+  protected static ?string $table = "otra_tabla";
+}
 ```
 
-## Credenciales de la base de datos
+Además, ya cuenta con métodos disponibles para interactuar con la base de datos, por ejemplo y que puedes utilizar desde un controlador:
 
-Para poder conectarse a una base de datos se necesita crear un archivo `.env` en la raíz de su proyecto.
+```php
 
-Y luego, copiar y pegar las siguientes líneas en él:
+  final class TestController extends Controller {
 
-```env
-DL_DATABASE_HOST = localhost
-DL_DATABASE_PORT = 3306
-DL_DATABASE_USER = usuario
-DL_DATABASE_PASSWORD = contraseña
-DL_DATABASE_NAME = database
-DL_DATABASE_CHARSET = utf8
-DL_DATABASE_COLLATION = utf8_general_ci
-DL_DATABASE_PREFIX = dl_
-DL_DATABASE_DRIVE = mysql
+    /**
+     * Ejemplo de interacción con el modelo `Products`.
+     * 
+     * @return array
+     */
+    public function products(): array {
+      new Products();
 
-DL_API_URL = http://localhost/api/
-DL_API_KEY = 123456789
+      /**
+       * Devuelve, máximo 100 registros
+       * 
+       * @var array $register
+       */
+      $register = Products::get();
+
+      /**
+       * Devuelve un número total de registros almacenados en la tabla
+       * `products`.
+       * 
+       * @var integer $count
+       */
+      $count = Products::count();
+
+      /**
+       * Número de páginas
+       * 
+       * @var integer
+       */
+      $page = 1;
+
+      /**
+       * Número de registro por página.
+       * 
+       * @var integer
+       */
+      $paginate = Products::paginate($page, $rows);
+
+      return [
+        "count" => $count,
+        "register" => $register,
+        "paginate" => $paginate
+      ]
+    }
+  }
 ```
 
-Se recomienda que el directorio donde cargue su sitio web sea `public_html/` o `public/`, y desde allí cargue el archivo `.env` que se encuentra en la raíz de su proyecto que es la que contiene el directorio antes mencionado.
+El fragmento anterior es un ejemplo básico de lo que hace el modelo `Products`, pero no solamente tiene métodos para recuperar registros, también para almacenar nuevos registros, por ejemplo:
 
-Es decir:
+```php
+final class TestController extends Controller {
 
-```bash
-raiz/
-  ├── public_html
-    │  └── index.php
-    │  └── assets/
-  ├── .env
-  ├── vendor/
-    └── autoload.php
+  public function products(): array {
+    $products = new Products();
+
+    $products->product_name = $products->required('product_name');
+    $products->product_description = $product->required('product_description');
+    $products->save();
+
+
+    return [];
+  }
+}
 ```
+
+## Documentación
+
+Esta documentación se irá actualizando progresivamente sobre el uso completo de esta herramienta. Apenas esto es una parte.
