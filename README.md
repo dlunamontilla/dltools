@@ -193,6 +193,86 @@ final class TestController extends Controller {
 }
 ```
 
+### Envío de correos electrónicos
+
+Esta herramienta utiliza `PHPMailer` para enviar correos electrónicos.
+
+Para enviar correos electrónicos desde su controlador, puede hacerlo de la siguiente forma:
+
+```php
+final class TestController extends Controller {
+
+  /**
+   * Ejemplo de envío de correos electrónicos.
+   * 
+   * @return array
+   */
+  public function mail(): array {
+
+    $email = new SendMail();
+
+    return $email->send(
+      $email->get_email('email_field'),
+      $body->get_required('body_field') # Puede contener código HTML
+    );
+  }
+}
+```
+
+Además, debe agregar previamente las siguientes líneas en el archivo `.env.type` para poder enviar correos electrónicos:
+
+```envtype
+# Servidor SMTP:
+MAIL_HOST: string = "smtp.su-hosting.com"
+
+# Cuenta de correo que enviará su correo electrónico:
+MAIL_USERNAME: email = no-reply@su-dominio.com
+
+# Contraseña de su cuenta de correo `no-reply@su-dominio.com`:
+MAIL_PASSWORD: string = "contraseña"
+
+# Correo electrónico en el que recibirá respuesta
+MAIL_CONTACT: email = contact@su-dominio.com
+
+```
+
+### Sistema de autenticación
+
+Para implementar un sistema de autenticación básico, debería crear una clase extendida en `DLUser` como se observa en las siguientes líneas:
+
+```php
+use DLTools\Auth\DLAuth;
+use DLTools\Auth\DLUser;
+
+class Users extends DLUser {
+
+  public function capture_credentials(): void {
+    /**
+     * Autenticación del usuario
+     * 
+     * @var DLAuth
+     */
+    $auth = DLAuth::get_instance();
+
+    $this->set_username(
+      $this->get_required('username')
+    );
+
+    $this->set_password(
+      $this->get_required('password')
+    );
+    
+    $auth->auth($this, [
+      "username_field" => 'username',
+      "password_field" => 'password',
+      "token_field" => 'token'
+    ]);
+  }
+}
+```
+
+---
+
 ## Documentación
 
 Esta documentación se irá actualizando progresivamente sobre el uso completo de esta herramienta. Apenas esto es una parte.

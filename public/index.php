@@ -1,6 +1,5 @@
 <?php
 use DLTools\Auth\DLAuth;
-use DLTools\Auth\DLUser;
 ini_set('display_errors', 1);
 
 /**
@@ -114,6 +113,7 @@ $auth = DLAuth::get_instance();
 DLRoute::post('/user/test', [TestController::class, 'users_test']);
 
 
+DLRoute::post('/mail', [TestController::class, 'mail']);
 
 
 DLRoute::execute();

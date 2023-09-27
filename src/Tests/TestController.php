@@ -5,6 +5,7 @@ namespace DLTools\Test;
 use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
 use DLTools\Auth\DLAuth;
+use DLTools\HttpRequest\SendMail;
 use DLTools\Tests\Category;
 use DLTools\Tests\Contacts;
 use DLTools\Tests\Products;
@@ -141,11 +142,15 @@ final class TestController extends Controller {
     /**
      * Realización de pruebas
      *
-     * @return void
+     * @return array
      */
-    public function users_test(): void {
+    public function users_test(): array {
         $users = new Users;
         $users->capture_credentials();
+
+        return [
+            $users->get_uuid('test')
+        ];
     }
 
     public function create_contact(): array {
@@ -159,5 +164,19 @@ final class TestController extends Controller {
         $users->save();
 
         return Contacts::get();
+    }
+
+    /**
+     * Envío de correos electrónicos
+     *
+     * @return array
+     */
+    public function mail(): array {
+        $email = new SendMail();
+
+        return $email->send(
+            $email->get_email('email'),
+            $email->get_required('body')
+        );
     }
 }

@@ -2,10 +2,12 @@
 
 namespace DLTools\HttpRequest;
 
-use DLTools\Auth\DLAuth;
+use DLRoute\Requests\DLRequest;
+use DLTools\Config\DLValues;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use DLTools\Compilers\DLMarkdown;
+use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
 
 /**
@@ -19,26 +21,9 @@ use DLTools\Config\DLConfig;
  * @version 1.0.0
  */
 class SendMail {
-    /**
-     * Instancia de PHPMailer
-     *
-     * @var PHPMailer
-     */
-    private PHPMailer $mail;
 
-    /**
-     * Procesa la petición enviada al servidor.
-     *
-     * @var DLRequest
-     */
-    private DLRequest $request;
-
-    /**
-     * Objecto de autenticación. Allí se encuentra el token.
-     *
-     * @var DLAuth
-     */
-    private DLAuth $auth;
+    use DLValues;
+    use DLConfig;
 
     /**
      * Configuración de conexión del proyecto
@@ -69,150 +54,84 @@ class SendMail {
     private bool $markdown = false;
 
     public function __construct() {
-        $this->config = DLConfig::getInstance();
-
-        $this->mail = new PHPMailer(true);
-        $this->request = DLRequest::getInstance();
-        $this->auth = new DLAuth;
+        $request = DLRequest::get_instance();
+        $this->values = $request->get_values();
     }
 
     /**
      * Permite enviar un correo electrónico. Los campos del formulario permitidos
      * son los siguientes:
      *
-     * `csrf-token`, `email`, `replyto`, `cc`, `bcc`, `name`, `lastname`, `subject`, `body` y `altbody`.
+     * `email`, `cc`, `bcc`, `name`, `lastname`, `subject`, `body` y `altbody`.
      * 
-     * Donde:
+     * `replyto` se integra en las variables de entorno.
      * 
-     * - `csrf-token`: Un token de seguridad que se utiliza para proteger un formulario de correo electrónico de ataques de cross-site request forgery (CSRF).
-     * - `email`: La dirección de correo electrónico del destinatario principal del mensaje.
-     * - `replyto`: La dirección de correo electrónico a la que se deben enviar las respuestas al mensaje.
-     * - `cc` (copia carbón): Las direcciones de correo electrónico de los destinatarios a los que se les enviará una copia visible del mensaje.
-     * - `bcc` (copia de carbón oculta): Las direcciones de correo electrónico de los destinatarios a los que se les enviará una copia invisible del mensaje.
-     * - `name`: El nombre del remitente.
-     * - `lastname`: El apellido del remitente.
-     * - `subject`: El asunto del mensaje.
-     * - `body`: El cuerpo del mensaje.
-     * - `altbody`: Una versión alternativa del cuerpo del mensaje que se puede utilizar si el cliente de correo electrónico no admite el formato original.
-     * 
-     * Siendo los campos `csrf-token` e `email` obligatorios.
-     * 
-     * El primer argumento que pases son los campos del formulario 
-     * que hayas establecidos en su código HTML, por ejemplo:
-     * 
-     * ```
-     * $mail->send([
-     *  'csrf-token' => true,
-     *  'email' => true,
-     *  'g-response-recaptcha' => true // Eso es en caso de usar el recaptcha de Google (recomendado).
-     * ]);
-     * ```
-     * 
-     * Donde `true` indica que el campo es requerido (obligatorio), es decir, no debe estar vacío.
-     * 
-     * @param array $param Parámetros de la petición a validar.
-     * 
-     * @param array $optionFields Esto permite reemplazar el valor de los campos del formulario
-     * que se hayan enviado, o en su defecto, simular que son campos del formulario. Si los campos que ha agregado
-     * no son los que están arriba mencionado, entonces, se ignorarán.
+     * @param string $email Requerido. Correo electrónico destinatario
+     * @param string $body Requerido. Cuerpo del mensdaje.
+     * @param ?string $altbody Opcional. Proporciona información alternativa del cuerpo.
+     * @param string $subject Opcional. Asunto del mensaje.
+     * @param string | null $name Opcional. Nombre del remitente.
+     * @param string | null $lastname Opcional. Apellidos del remitente.
+     * @param string | null $cc Opcional. Copia
+     * @param string | null $bcc Opcional. Copia oculta.
      * 
      * @return array
      */
-    public function send(array $param, array $optionFields = []): array {
-        $mail = $this->mail;
-
-        $is_valid = $this->request->post($param);
-
-        if (!$is_valid) return [
-            "send" => false,
-            "message" => "Los parámetros de la petición no son válidos"
-        ];
-
-        $values = $this->request->getValues();
-
-        if (!isset($values['csrf-token'])) {
-            throw new \Error("El campo \"csrf-token\" es obligatorio");
-        }
-
-        $token = $values['csrf-token'] ?? 'Token';
-
-        if ($token !== $this->auth->getToken()) {
-            return [
-                "send" => false,
-                "message" => "Sospecha de ataque CSRF con petición ilegítima"
-            ];
-        }
-
-        foreach ($optionFields as $key => $value) {
-            $values[$key] = $value;
-        }
-
-        $values = (object) $values;
-
-        if (!isset($values->email)) {
-            throw new \Error("El campo `email` es obligatorio");
-        }
+    public function send(
+        string $email,
+        string $body,
+        ?string $altbody = null,
+        string $subject = "",
+        ?string $name = null,
+        ?string $lastname = null,
+        ?string $cc = null,
+        ?string $bcc = null
+    ): array {
 
         /**
          * Credenciales que provienen de las variables
          * de entorno.
          * 
-         * @var object $credentials
+         * @var Credentials $credentials
          */
-        $credentials = $this->config->getCredentials();
+        $credentials = $this->get_credentials();
 
-        /**
-         * Correo destinatario.
-         * 
-         * @var string $email
-         */
-        $email = $this->sanitizeEmail($values->email ?? '');
+        if (is_null($email) || !($this->is_email($email))) {
+            $this->error_type("Formato de correo inválido hacia el destinatario");
+        }
 
         /**
          * Dirección de correo electrónico a la que se deben enviar las respuestas
          * al mensaje.
          * 
-         * @var string $replyTo
+         * @var string $replyto
          */
-        $replyTo = $this->sanitizeEmail($values->replyto ?? ($credentials->MAIL_REPLY ?? ''));
-
-        /**
-         * Las direcciones de correo electrónico de los destinatarios a los que se
-         * les enviará una copia visible del mensaje.
-         * 
-         * @var string $cc
-         */
-        $cc = $this->sanitizeEmail($values->cc ?? '');
-
-        /**
-         * Las direcciones de correo electrónico de los destinatarios a los que se
-         * les enviará una copia invisible del mensaje.
-         * 
-         * @var string $bcc
-         */
-        $bcc = $this->sanitizeEmail($values->bcc ?? '');
+        $replyto = $credentials->get_mail_contact();
 
         /**
          * Nombre y apellido del remitente.
          * 
          * @var string $name
          */
-        $name = $this->sanitizeString(($values->name ?? '') . ($values->lastname ?? ''));
+        $full_name = $this->sanitizeString(
+            ($name ?? '') . " " . ($lastname ?? '')
+        );
 
         /**
          * Asunto del mensaje.
          * 
          * @var string $subject
          */
-        $subject = $this->sanitizeString($values->subject ?? '');
+        $subject = $this->sanitizeString(
+            $this->get_input('subject') ?? ''
+        );
 
         /**
          * Cuerpo del mensaje.
          * 
          * @var string $body
          */
-        $body = trim($values->body ?? '');
-
+        $body = trim($this->get_required('body'));
         $body = $this->decodeString($body);
 
         if ($this->markdown) {
@@ -225,49 +144,42 @@ class SendMail {
          * 
          * @var string $altbody
          */
-        $altbody = $this->sanitizeString($values->altbody ?? '');
-
-        if (!$this->checkEmail($email)) {
-            return [
-                "send" => false,
-                "message" => 'El correo electrónico ingresado no es válido'
-            ];
-        }
+        $altbody = $this->sanitizeString($this->get_input('altbody') ?? '');
 
         /**
          * Correo remitente.
          * 
          * @var string $username
          */
-        $username = $this->sanitizeEmail($credentials->MAIL_USERNAME ?? 'contact@' . $this->sanitizeString(DLHost::getHostname()));
+        $username = $credentials->get_mail_username();
 
         /**
          * Contraseña del remitente
          * 
          * @var string $password
          */
-        $password = $credentials->MAIL_PASSWORD ?? '';
+        $password = $credentials->get_mail_password();
 
         /**
          * Puerto del servidor de correo.
          * 
          * @var int $port
          */
-        $port = (int) $credentials->MAIL_PORT ?? 465;
+        $port = $credentials->get_mail_port();
 
         /**
-         * Host del servidor de correo electrónico.
+         * Servidor SMTP del servidor de correos electrónicos.
          * 
          * @var string $emailhost
          */
-        $emailhost = $this->sanitizeString($credentials->MAIL_HOST ?? '');
+        $emailhost = $credentials->get_mail_host();
 
         /**
          * Nombre del remitente.
          * 
          * @var string $companyName
          */
-        $companyName = $this->sanitizeString($credentials->MAIL_COMPANY_NAME ?? '');
+        $companyName = $credentials->get_mail_company_name();
 
         # Uso de la biblioteca `PHPMailer`
         $mailer = new PHPMailer(true);
@@ -288,18 +200,27 @@ class SendMail {
             $mailer->setFrom($username, $companyName);
 
             # Destinatario:
-            $mailer->addAddress($email, $name);
+            $mailer->addAddress($email, $full_name);
+            $mailer->addReplyTo($replyto, $companyName);
 
-            if (!empty(trim($replyTo))) {
-                $mailer->addReplyTo($replyTo, $companyName);
+            if (is_string($cc)) {
+                $cc = trim($cc);
+
+                if (!($this->is_email($cc))) {
+                    $this->error_type("Formato de correo inválido en \$cc");
+                }
+
+                $mailer->addCC($cc, $full_name);
             }
 
-            if (!empty(trim($cc))) {
-                $mailer->addCC(trim($cc));
-            }
+            if (is_string($bcc)) {
+                $bcc = trim($bcc);
 
-            if (!empty(trim($bcc))) {
-                $mailer->addBCC(trim($bcc));
+                if (!($this->is_email($bcc))) {
+                    $this->error_type("Formato de correo inválido en \$bcc");
+                }
+
+                $mailer->addBCC($bcc, $full_name);
             }
 
             # Datos adjuntos | Inhabilitado en esta versión
@@ -320,39 +241,10 @@ class SendMail {
                 "message" => 'Envío exitoso de correo electrónico'
             ];
         } catch (Exception $error) {
-            return [
-                "send" => false,
-                "message" => 'No se pudo enviar el mensaje. Se produjo una excepción durante el envío. Error: ' . $mailer->ErrorInfo
-            ];
-        }
-    }
-
-    /**
-     * Verificar si la cadena de texto es un correo electrónico.
-     *
-     * @param string $email
-     * @return boolean
-     */
-    public function checkEmail(string $email): bool {
-        $isEmail = (FALSE !== filter_var($email, FILTER_VALIDATE_EMAIL));
-
-        if ($isEmail) {
-            list($user, $domain) = explode('@', $email);
-            return checkdnsrr($domain, 'MX');
+            $this->exception($error, true);
         }
 
-        return $isEmail;
-    }
-
-    /**
-     * Elimina caracteres que no forman parte de un nombre válido de correo electrónico.
-     *
-     * @param string $email
-     * @return string
-     */
-    public function sanitizeEmail(string $email): string {
-        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-        return (string) $email;
+        return [];
     }
 
     /**
@@ -364,16 +256,6 @@ class SendMail {
     public function sanitizeString(string $text): string {
         $text = filter_var($text, FILTER_SANITIZE_ENCODED | FILTER_SANITIZE_SPECIAL_CHARS);
         return (string) $text;
-    }
-
-    /**
-     * Verifica si la está vacía la cadena de texto que se pasa como argumento.
-     *
-     * @param string $text
-     * @return string
-     */
-    public function isEmpty(string $text): bool {
-        return empty(trim($text));
     }
 
     /**

@@ -1,5 +1,4 @@
 <?php
-
 namespace DLTools\Auth;
 
 use DLRoute\Requests\DLOutput;

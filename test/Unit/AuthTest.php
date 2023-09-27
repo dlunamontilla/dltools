@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 use DLTools\Auth\DLAuth;
 use PHPUnit\Framework\TestCase;

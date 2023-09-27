@@ -3,7 +3,6 @@
 namespace DLTools\Config;
 
 use DLRoute\Requests\DLOutput;
-use SebastianBergmann\Type\NullType;
 
 trait DLValues {
 
@@ -56,7 +55,7 @@ trait DLValues {
             $value = trim($value);
         }
 
-        if (!($this->is_email($value))) {
+        if (is_null($value) || !($this->is_email($value))) {
             $this->invalid_type($value);
         }
 

@@ -120,9 +120,10 @@ trait DLConfig {
      * Devuelve errores personalizados
      *
      * @param array|object $data Contenido de error
+     * @param bool $mail Opcional. Indica si es un error de envío de correo electrónico o no.
      * @return void
      */
-    protected function exception(PDOException|Exception|Error $error): void {
+    protected function exception(PDOException|Exception|Error $error, bool $mail = false): void {
         header('Content-Type: application/json; charset=utf8', true, 500);
 
         /**
@@ -139,6 +140,10 @@ trait DLConfig {
          */
         $is_producton = $credentials->is_production();
 
+        $message = $mail
+            ? "Error en el envío del correo electrónico"
+            : "Error en la base de datos";
+
         /**
          * Detalles de error
          * 
@@ -146,7 +151,7 @@ trait DLConfig {
          */
         $error = [
             "status" => false,
-            "error" => "Error en la base de datos",
+            "error" => $message,
             "details" => $error
         ];
 
