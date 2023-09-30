@@ -250,7 +250,7 @@ class DLTemplate {
         $stringTemplate = self::convertStringArrayToJSON($stringTemplate);
         $stringTemplate = self::parseIncludes($stringTemplate);
         $stringTemplate = self::parsePrint($stringTemplate);
-        $stringTemplate = self::parseToken($stringTemplate);
+        $stringTemplate = self::generateTokenCSRF($stringTemplate);
         $stringTemplate = self::parseMarkdown($stringTemplate);
 
         $stringTemplate = self::parseFunctions($stringTemplate);
@@ -429,16 +429,67 @@ class DLTemplate {
      * @param string $stringTemplate
      * @return string
      */
-    private static function parseToken(string $stringTemplate): string {
+    private static function generateTokenCSRF(string $stringTemplate): string {
+        $stringTemplate = self::generateTokenCSRFWithField($stringTemplate);
+
+        /**
+         * Patrón de busca de la directiva @csrf
+         * 
+         * @var string $pattern
+         */
         $pattern = "/@csrf/";
 
         $auth = DLAuth::get_instance();
         $token = $auth->get_token();
 
-        $replace = "<input type=\"hidden\" name=\"csrf-token\" id=\"csrf-token\" value=\"$token\" />";
+        $replace = "<input type=\"hidden\" name=\"csrf-token\" id=\"csrf-token\" value=\"{$token}\" />";
         $stringTemplate = preg_replace($pattern, $replace, $stringTemplate) ?? $stringTemplate;
 
         return $stringTemplate;
+    }
+
+    /**
+     * Permite establecer un nombre personalizado al campo oculto del token CSRF.
+     *
+     * @param string $stringTemplate
+     * @return string
+     */
+    private static function generateTokenCSRFWithField(string $stringTemplate): string {
+        /**
+         * Autenticador del sistema
+         * 
+         * @var DLAuth $auth
+         */
+        $auth = DLAuth::get_instance();
+
+        /**
+         * Token del sistema
+         * 
+         * @var string $token
+         */
+        $token = $auth->get_token();
+
+        /**
+         * Patrón de búsqueda de la directiva @csrf
+         * 
+         * @var string $pattern
+         */
+        $pattern = '/\@csrf\(\"(.*)\"\)/';
+
+        /**
+         * Valor de reemplazo.
+         * 
+         * @var string
+         */
+        $replace = "<input type=\"hidden\" name=\"$1\" id=\"$1\" value=\"{$token}\" />";
+
+        $stringTemplate = preg_replace($pattern, $replace, $stringTemplate);
+
+        $pattern = '/\@csrf\(\'(.*)\'\)/';
+
+        $stringTemplate = preg_replace($pattern, $replace, $stringTemplate);
+
+        return trim($stringTemplate);
     }
 
     /**

@@ -254,6 +254,10 @@ class DLAuth implements AuthInterface {
             $auth = array_merge($user_data, [
                 "ip" => DLServer::get_ipaddress(),
                 "user_agent" => DLServer::get_user_agent(),
+                "hostname" => DLServer::get_hostname(),
+                "http_host" => DLServer::get_http_host(),
+                "server_software" => DLServer::get_server_software(),
+                "port" => DLServer::get_port()
             ]);
         }
 

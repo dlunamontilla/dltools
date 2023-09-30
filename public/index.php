@@ -43,7 +43,17 @@ function view(string $view, array $options = []): string {
 }
 
 DLRoute::get('/', function(object $params) {
-    return view('test');
+    return view('test', [
+        "basedir" => '',
+        "authenticted" => 1,
+        "files" => '',
+        "uploads" => '',
+        "info" => '',
+        "query" => '',
+        "username" => '',
+        "token" => '',
+        "isValid" => ''
+    ]);
 });
 
 DLRoute::get('/files', function() {
