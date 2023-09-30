@@ -2,8 +2,8 @@
 
 namespace DLTools\Auth;
 
+use DLRoute\Requests\DLRequest;
 use DLTools\Config\DLConfig;
-use DLTools\HttpRequest\DLRequest;
 
 /**
  * Por ahora, procesa el reCAPTCHA creado por Google. En futuras
@@ -16,6 +16,9 @@ use DLTools\HttpRequest\DLRequest;
  * @license MIT
  */
 class DLRecaptcha {
+
+    use DLConfig;
+    
     private static ?self $instance = NULL;
 
     private function __construct() {
@@ -28,17 +31,25 @@ class DLRecaptcha {
      * @return boolean
      */
     public function post(): bool {
-        $config = DLConfig::getInstance();
-        $request = DLRequest::getInstance();
+        $request = DLRequest::get_instance();
 
         /**
          * Respuesta recibida de Google.
          * 
          * @var string $response
          */
-        $response = ($request->getValues())['g-recaptcha-response'];
+        $response = ($request->get_values())['g-recaptcha-response'] ?? null;
 
-        $credentials = $config->getCredentials();
+        if (is_null($response)) {
+            throw new \Error("Para validar con Google, utilice el campo `g-recaptcha-response`");
+        }
+
+        /**
+         * Credenciales devueltas de las variables de entorno
+         * 
+         * @var object $credentials
+         */
+        $credentials = $this->get_environments_as_object();
 
         // Ruta de la petición:
         $url = "https://www.google.com/recaptcha/api/siteverify";
@@ -77,7 +88,7 @@ class DLRecaptcha {
      *
      * @return self
      */
-    public static function getInstance(): self {
+    public static function get_instance(): self {
         if (!self::$instance) {
             self::$instance = new self;
         }

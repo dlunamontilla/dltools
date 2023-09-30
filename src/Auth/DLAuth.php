@@ -2,6 +2,7 @@
 namespace DLTools\Auth;
 
 use DLRoute\Requests\DLOutput;
+use DLRoute\Server\DLServer;
 use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
 use DLTools\Config\Logs;
@@ -52,49 +53,6 @@ class DLAuth implements AuthInterface {
     public function get_token(): string {
         $this->set_token('csrf-token');
         return $this->token;
-    }
-
-    public function get_username(): string {
-        /**
-         * Nombre de usuario.
-         * 
-         * @var string
-         */
-        $username = $this->get_session_value('user_username');
-
-        return trim($username);
-    }
-
-    public function get_name(): string {
-        /**
-         * Nombres del usuario
-         * 
-         * @var string
-         */
-        $name = $this->get_session_value('user_name');
-
-        return trim($name);
-    }
-
-    public function get_lastname(): string {
-        /**
-         * Apellidos del usuario
-         * 
-         * @var string
-         */
-        $lastname = $this->get_session_value('user_lastname');
-
-        return trim($lastname);
-    }
-
-    public function get_user_uuid(): string {
-        $uuid = $this->get_session_value('user_uuid');
-        return trim($uuid);
-    }
-
-    public function get_user_id(): int {
-        $id = (int) $this->get_session_value('user_id');
-        return $id;
     }
 
     public function get_hash(): string {
@@ -293,7 +251,10 @@ class DLAuth implements AuthInterface {
                 unset($user_data[$password_field]);
             }
 
-            $auth = $user_data;
+            $auth = array_merge($user_data, [
+                "ip" => DLServer::get_ipaddress(),
+                "user_agent" => DLServer::get_user_agent(),
+            ]);
         }
 
         $this->set_session_value('auth', $auth);
@@ -341,7 +302,7 @@ class DLAuth implements AuthInterface {
      * @param string $field Nombre del token
      * @return void
      */
-    private function set_token(string $field): void {
+    protected function set_token(string $field): void {
         $hash = $this->get_hash();
 
         $this->set_session_value($field, $hash);
@@ -355,7 +316,7 @@ class DLAuth implements AuthInterface {
      * @param mixed $value Valor
      * @return void
      */
-    private function set_session_value(string $field, mixed $value): void {
+    protected function set_session_value(string $field, mixed $value): void {
 
         if (!array_key_exists($field, $_SESSION) || empty($_SESSION[$field])) {
             $_SESSION[$field] = $value;
