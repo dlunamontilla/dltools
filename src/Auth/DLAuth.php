@@ -333,7 +333,7 @@ class DLAuth implements AuthInterface {
      * @param string $field Campo o clave de la variable de sesión.
      * @return mixed
      */
-    private function get_session_value(string $field): mixed {
+    public function get_session_value(string $field): mixed {
         /**
          * Valor de una variable de sesión.
          * 
