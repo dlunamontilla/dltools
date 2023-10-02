@@ -32,6 +32,8 @@ class DLRecaptcha {
      * @return boolean
      */
     public function post(): bool {
+        $this->parse_file();
+        
         /**
          * Instancia del procesador de peticiones
          * 
