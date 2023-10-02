@@ -3,6 +3,7 @@
 namespace DLTools\Auth;
 
 use DLRoute\Requests\DLRequest;
+use DLRoute\Server\DLServer;
 use DLTools\Config\DLConfig;
 
 /**
@@ -31,6 +32,11 @@ class DLRecaptcha {
      * @return boolean
      */
     public function post(): bool {
+        /**
+         * Instancia del procesador de peticiones
+         * 
+         * @var DLRequest $request
+         */
         $request = DLRequest::get_instance();
 
         /**
@@ -51,19 +57,51 @@ class DLRecaptcha {
          */
         $credentials = $this->get_environments_as_object();
 
-        // Ruta de la petición:
+        /**
+         * Ruta de la petición
+         * 
+         * @var string $url
+         */
         $url = "https://www.google.com/recaptcha/api/siteverify";
 
-        $ip = @$_SERVER['REMOTE_ADDR'];
+        /**
+         * Dirección IP del cliente HTTP.
+         * 
+         * @var string $ip
+         */
+        $ip = DLServer::get_ipaddress();
 
-        // Datos de envío:
+        if (!isset($credentials->G_SECRET_KEY)) {
+            return false;
+        }
+
+        if (!array_key_exists('value', $credentials->G_SECRET_KEY)) {
+            return false;
+        }
+
+        /**
+         * Clave secreta de Google
+         * 
+         * @var string $secret_key
+         */
+        $secret_key = $credentials->G_SECRET_KEY['value'];
+
+        /**
+         * Parámetros de la petición
+         * 
+         * @var array $datos
+         */
         $datos = [
-            "secret" => $credentials->G_SECRET_KEY ?? '',
+            "secret" => $secret_key,
             "response" => $response,
             "remoteip" => $ip
         ];
 
-        // Opciones de envío:
+        /**
+         * Cabecera HTTP
+         * 
+         * @var array $opciones
+         */
         $opciones = [
             "http" => [
                 "header" => "Content-type: application/x-www-form-urlencoded\r\n",
@@ -72,10 +110,18 @@ class DLRecaptcha {
             ]
         ];
 
-        // Preparando la petición:
+        /**
+         * Contexto de la petición
+         * 
+         * @var resource $contexto
+         */
         $contexto = stream_context_create($opciones);
 
-        // Enviar la petición:
+        /**
+         * Resultados de la petición
+         * 
+         * @var string|array|object $resultados
+         */
         $resultados = file_get_contents($url, false, $contexto);
         $resultados = json_decode($resultados);
 
