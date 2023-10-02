@@ -292,7 +292,7 @@ class DLAuth implements AuthInterface {
                 true
             );
 
-            $this->set_session_value('__auth__', $token);
+            $_SESSION['__auth__'] = $token;
         }
 
         $this->set_session_value('auth', $auth);
