@@ -174,6 +174,14 @@ class DLAuth implements AuthInterface {
             $user->get_username()
         )->first();
 
+        /**
+         * Token de autenticación de usuario.
+         * 
+         * @var string $user_token
+         */
+        $user_token = $user_data[$token_field] ?? $this->generate_token();
+
+        
         if (array_key_exists($password_field, $user_data)) {
             $user->set_password_hash(
                 $user_data[$password_field]
@@ -182,8 +190,15 @@ class DLAuth implements AuthInterface {
 
         if (array_key_exists($token_field, $user_data)) {
             $user->set_token_user(
-                $user_data[$token_field]
+                $user_token
             );
+
+            $user->where(
+                $username_field,
+                $user->get_username()
+            )->update([
+                $token_field => $user_token
+            ]);
         }
 
         /**
@@ -257,7 +272,8 @@ class DLAuth implements AuthInterface {
                 "hostname" => DLServer::get_hostname(),
                 "http_host" => DLServer::get_http_host(),
                 "server_software" => DLServer::get_server_software(),
-                "port" => DLServer::get_port()
+                "port" => DLServer::get_port(),
+                $token_field => $user_token
             ]);
 
             /**
@@ -296,6 +312,8 @@ class DLAuth implements AuthInterface {
         }
 
         $_SESSION['auth'] = $auth;
+
+        print_r($auth);
     }
 
     public function logged(callable $callback): void {
