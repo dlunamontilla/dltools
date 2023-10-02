@@ -295,7 +295,7 @@ class DLAuth implements AuthInterface {
             $_SESSION['__auth__'] = $token;
         }
 
-        $this->set_session_value('auth', $auth);
+        $_SESSION['auth'] = $auth;
     }
 
     public function logged(callable $callback): void {
