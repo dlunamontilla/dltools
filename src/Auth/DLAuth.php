@@ -312,8 +312,6 @@ class DLAuth implements AuthInterface {
         }
 
         $_SESSION['auth'] = $auth;
-
-        print_r($auth);
     }
 
     public function logged(callable $callback): void {
