@@ -259,6 +259,40 @@ class DLAuth implements AuthInterface {
                 "server_software" => DLServer::get_server_software(),
                 "port" => DLServer::get_port()
             ]);
+
+            /**
+             * Credenciales tomadas de la variable de entorno
+             * 
+             * @var Credentials
+             */
+            $credentiales = $this->get_credentials();
+
+            /**
+             * Establece los bytes en formato binario
+             * 
+             * @var string $bytes
+             */
+            $bytes = random_bytes(128);
+
+
+            /**
+             * Token de validación de sesiones
+             * 
+             * @var string $token
+             */
+            $token = bin2hex($bytes);
+
+            setcookie(
+                "__auth__",
+                $token,
+                time() + 60 * 60 * 24 * 30,
+                "/",
+                DLServer::get_hostname(),
+                $credentiales->is_production(),
+                true
+            );
+
+            $this->set_session_value('__auth__', $token);
         }
 
         $this->set_session_value('auth', $auth);
