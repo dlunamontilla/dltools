@@ -78,9 +78,9 @@ class DLAuth implements AuthInterface {
      *
      * @param DLUser $user Usuario a autenticar
      * @param array $options Opciones de autenticación
-     * @return void
+     * @return boolean
      */
-    public function auth(DLUser $user, $options = []): void {
+    public function auth(DLUser $user, $options = []): bool {
         /**
          * Variables de entorno.
          * 
@@ -157,11 +157,11 @@ class DLAuth implements AuthInterface {
                 ], true);
 
                 Logs::save('username.log', $error);
-                return;
+                return false;
             }
 
             echo DLOutput::get_json($error, true);
-            return;
+            return false;
         }
 
         /**
@@ -312,6 +312,8 @@ class DLAuth implements AuthInterface {
         }
 
         $_SESSION['auth'] = $auth;
+
+        return $is_valid;
     }
 
     public function logged(callable $callback): void {
