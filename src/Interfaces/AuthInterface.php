@@ -33,9 +33,9 @@ interface AuthInterface {
     /**
      * Autentica el usuario, en el caso de los datos sean correctos.
      *
-     * @return void
+     * @return bool
      */
-    public function auth(DLUser $user): void;
+    public function auth(DLUser $user): bool;
 
     /**
      * Permite ejecutar acciones cuadno el usuario está autenticado
