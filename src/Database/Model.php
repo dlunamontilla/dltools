@@ -41,7 +41,7 @@ abstract class Model {
      * 
      * @var DLDatabase $db
      */
-    private static ?DLDatabase $db = null;
+    protected static ?DLDatabase $db = null;
 
     public function __construct() {
         $classname = get_class($this);
