@@ -214,11 +214,14 @@ trait DLValues {
          */
         $value = $this->values[$field] ?? null;
 
-        if (!($this->is_string($value))) {
+        if (gettype($value) !== "string") {
             $this->invalid_type($value);
         }
 
-        return trim($value);
+        $value = trim($value, "\"\'");
+        $value = trim($value);
+
+        return $value;
     }
 
     /**
