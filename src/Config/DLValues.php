@@ -23,7 +23,7 @@ trait DLValues {
      */
     public function get_input(string $name): mixed {
         
-        if (!array_key_exists($name, $this->values)) {
+        if (!array_key_exists($name, static::$values)) {
             return null;
         }
 
@@ -32,7 +32,7 @@ trait DLValues {
          * 
          * @var mixed
          */
-        $value = $this->values[$name] ?? null;
+        $value = static::$values[$name] ?? null;
         return $value;
     }
 
@@ -49,7 +49,7 @@ trait DLValues {
          * 
          * @var string|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -75,7 +75,7 @@ trait DLValues {
          * 
          * @var string|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -101,7 +101,7 @@ trait DLValues {
          * 
          * @var int|float|string|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -133,7 +133,7 @@ trait DLValues {
          * 
          * @var string|int|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -159,7 +159,7 @@ trait DLValues {
          * 
          * @var string|float|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -185,7 +185,7 @@ trait DLValues {
          * 
          * @var string|boolean|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_string($value)) {
             $value = trim($value);
@@ -212,7 +212,7 @@ trait DLValues {
          * 
          * @var string|null
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (gettype($value) !== "string") {
             $this->invalid_type($value);
@@ -237,7 +237,7 @@ trait DLValues {
          * 
          * @var mixed
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (is_null($value)) {
             $this->error_requirenment("El campo «{$field}» es requerido");
@@ -268,7 +268,7 @@ trait DLValues {
          * 
          * @var string|null $value
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
 
         if (!is_string($value)) {
             $this->invalid_type($value);
@@ -297,7 +297,7 @@ trait DLValues {
          * 
          * @var string|null $value
          */
-        $value = $this->values[$field] ?? null;
+        $value = static::$values[$field] ?? null;
         
         if (!is_string($value)) {
             $this->invalid_type($value);
