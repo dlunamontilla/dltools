@@ -3,8 +3,11 @@
 namespace DLTools\Database;
 
 use DLRoute\Requests\DLRequest;
+use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
 use DLTools\Config\DLValues;
+use DLTools\Config\Environment;
+use Error;
 
 /**
  * Procesa las consultas de las tablas que se encuentran asociadas
@@ -43,29 +46,22 @@ abstract class Model {
      */
     protected static ?DLDatabase $db = null;
 
+    /**
+     * Indica si se debe ordenar por una o varias columnas
+     *
+     * @var array|null
+     */
+    protected static ?array $order_by = null;
+
+    /**
+     * Indica si se ordenade forma descendente o ascendente
+     *
+     * @var string|null
+     */
+    protected static ?string $order = "desc";
+
     public function __construct() {
-        $classname = get_class($this);
-        $this->set_table_name($classname);
-
-        /**
-         * Peticiones de usuario.
-         * 
-         * @var DLRequest
-         */
-        $request = DLRequest::get_instance();
-
-        /**
-         * Entradas del usuario
-         * 
-         * @var string|array
-         */
-        $values = $request->get_values();
-
-        if (is_array($values)) {
-            $this->values = $values;
-        }
-
-        static::$db = DLDatabase::get_instance();
+        self::init();
     }
 
     /**
@@ -114,7 +110,7 @@ abstract class Model {
      * @param string $classname Nombre de la clase
      * @return void
      */
-    private function set_table_name(string $classname): void {
+    private static function set_table_name(string $classname): void {
         /**
          * Parte del nombre de clase.
          * 
@@ -150,7 +146,7 @@ abstract class Model {
          * 
          * @var string
          */
-        $prefix = $this->get_prefix();
+        $prefix = self::get_prefix();
 
         /**
          * Tabla de la base de datos.
@@ -171,13 +167,20 @@ abstract class Model {
      *
      * @return string
      */
-    private function get_prefix(): string {
+    private static function get_prefix(): string {
+        /**
+         * Variables de entorno
+         * 
+         * @var Environment $environment
+         */
+        $environment = Environment::get_instance();
+
         /**
          * Devuelve las credenciales a partir de las variables de entorno.
          * 
-         * @var object
+         * @var Credentials $credentials
          */
-        $credentials = $this->get_credentials();
+        $credentials = $environment->get_credentials();
 
         /**
          * Prefijo que se usará en las tablas.
@@ -196,56 +199,77 @@ abstract class Model {
      * @return array
      */
     public static function get(string ...$fields): array {
-
-        /**
-         * Base de datos.
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
+        static::init();
 
         /**
          * Datos de la consulta.
          * 
          * @var array
          */
-        $data = $db->from(static::$table)->select(...$fields)->limit(100)->get();
+        $data = [];
+
+
+        if (!is_null(static::$order_by) && count(static::$order_by) > 0) {
+            if (static::$order !== "desc" && static::$order !== "asc") {
+                throw new Error("Solo se permiten `desc` o `asc`");
+            }
+
+            $data = static::$db->from(static::$table)
+                        ->select(...$fields)
+                        ->order_by(...static::$order_by)
+                ->{static::$order}()
+                    ->limit(100)
+                    ->get();
+        }
+
+        if (count($data) < 1) {
+            $data = static::$db->from(static::$table)->select(...$fields)->limit(100)->get();
+        }
 
         return $data;
     }
 
     /**
      * Inserta registro en la base de datos.
+     * 
+     * Si va a agregar un registro, debe hacerlo así:
+     * 
+     * ```
+     * <?php
+     * ...
+     * 
+     * Tabla::insert([
+     *  "column" => "Contenido de la columna"
+     * ]);
+     * ```
+     * 
+     * Puede agregar múltiples registros agregando un array de array asociativos
      *
-     * @param array $fields
+     * @param array $fields Seleccione los campos de tu tabla
      * @return boolean
      */
     public static function insert(array $fields): bool {
-        /**
-         * Base de datos.
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
+        static::init();
 
         /**
          * Indicador de inserción de datos.
          * 
          * @var boolean
          */
-        $it_was_inserted = $db->from(static::$table)->insert($fields);
+        $it_was_inserted = static::$db->from(static::$table)->insert($fields);
 
         return $it_was_inserted;
     }
 
     /**
-     * Alias del método `insert`.
+     * Alias del método estático `insert`.
      *
      * @param array $fields Campos de la tabla.
      * @return boolean
      */
     public static function create(array $fields): bool {
-        return self::insert($fields);
+        static::init();
+        return static::insert($fields);
     }
 
     /**
@@ -257,14 +281,8 @@ abstract class Model {
      * @return DLDatabase
      */
     public static function where(string $field, string $operator, ?string $value = null): DLDatabase {
-        /**
-         * Base de datos
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
-
-        return $db->from(static::$table)->where($field, $operator, $value);
+        static::init();
+        return static::$db->from(static::$table)->where($field, $operator, $value);
     }
 
     /**
@@ -275,31 +293,22 @@ abstract class Model {
      * @return DLDatabase
      */
     public static function select(array|string $fields = "*", string ...$other_fields): DLDatabase {
-        /**
-         * Base de datos
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
-
-        return $db->from(static::$table)->select($fields, ...$other_fields);
+        static::init();
+        return static::$db->from(static::$table)->select($fields, ...$other_fields);
     }
 
     /**
-     * Devuelve el primer registro de la consulta.
+     * Devuelve el primer registro de una consulta.
      *
-     * @param array $params Parámetros de la consulta
+     * @param string ...$fields Seleccione los campos que se mostrarán
      * @return array
      */
-    public static function first(array $params = []): array {
-        /**
-         * Base de datos.
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
+    public static function first(string ...$fields): array {
+        static::init();
 
-        return $db->from(static::$table)->first($params);
+        return static::$db->from(static::$table)
+            ->select(...$fields)
+            ->first();
     }
 
     /**
@@ -308,19 +317,14 @@ abstract class Model {
      * @return integer
      */
     public static function count(): int {
-        /**
-         * Base de datos.
-         * 
-         * @var DLDatabase
-         */
-        $db = DLDatabase::get_instance();
+        static::init();
 
         /**
          * Registros de una tabla.
          * 
          * @var array
          */
-        $data = $db->from(static::$table)->count();
+        $data = static::$db->from(static::$table)->count();
 
         return $data['count'] ?? 0;
     }
@@ -336,7 +340,7 @@ abstract class Model {
             return false;
         }
 
-        return self::insert($this->fields);
+        return static::insert($this->fields);
     }
 
     /**
@@ -346,6 +350,7 @@ abstract class Model {
      * @return DLDatabase
      */
     public static function order_by(string ...$column): DLDatabase {
+        static::init();
         return static::$db->from(static::$table)->order_by(...$column);
     }
 
@@ -357,6 +362,7 @@ abstract class Model {
      * @return array
      */
     public static function paginate(int $page = 1, int $rows = 100): array {
+        static::init();
 
         if ($page < 1) {
             static::error("\$page debe ser mayor que cero (0)");
@@ -372,7 +378,7 @@ abstract class Model {
          * @var integer $quantity
          */
         $quantity = static::count();
-        
+
         /**
          * Cantidad de registro de comienzo.
          * 
@@ -395,12 +401,43 @@ abstract class Model {
          */
         $register = [];
 
-        if ($quantity > 0) {
+        /**
+         * Datos vacío.
+         * 
+         * @var array $empty_data
+         */
+        $empty_data = [
+            "pages" => 1,
+            "page" => 1,
+            "pagination" => "1 de 1",
+            "rows" => 0,
+
+            "register" => []
+        ];
+
+        if ($quantity < 1) {
+            return $empty_data;
+        }
+
+        if (!is_null(static::$order_by)) {
+            if (static::$order !== "desc" && static::$order !== "asc") {
+                throw new Error("Solo se permiten `desc`o `asc`", 103);
+            }
+
+            $register = static::$db
+                ->from(static::$table)
+                ->order_by(...static::$order_by)
+                ->{static::$order}()
+                ->limit($start, $rows)
+                ->get();
+        }
+
+        if (count($register) < 1) {
             $register = static::$db->from(static::$table)->limit($start, $rows)->get();
         }
 
         if ($quantity <= 0) {
-            $pages = 0;
+            $pages = 1;
             $rows = 0;
             $page = 1;
         }
@@ -421,4 +458,84 @@ abstract class Model {
 
         return $data;
     }
+
+    /**
+     * Inicializa la 
+     *
+     * @return void
+     */
+    protected static function init(): void {
+        static::set_table_name(static::class);
+
+        /**
+         * Peticiones de usuario.
+         * 
+         * @var DLRequest
+         */
+        $request = DLRequest::get_instance();
+
+        /**
+         * Entradas del usuario
+         * 
+         * @var string|array
+         */
+        $values = $request->get_values();
+
+        if (is_array($values)) {
+            static::$values = $values;
+        }
+
+        static::$db = DLDatabase::get_instance();
+    }
+
+    /**
+     * Permite configurar el ordenamiento por una o varias columnas específicas y un tipo de orden, siendo 'desc' (descendente) el valor predeterminado.
+     * 
+     * Los valores admitidos en `$type` son: `desc` y `asc`
+     * 
+     * - **`desc`:** Para ordenar de forma descendente.
+     * - **`asc`:** Para ordenar deforma ascendente.
+     *
+     * @param string $field Un string que contiene una o más columnas separadas por comas para ordenar.
+     * @param string $type El tipo de orden, con 'desc' (descendente) como valor predeterminado.
+     * @return void
+     */
+    public static function set_order(string $field, string $type = "desc"): void {
+        /**
+         * Patrón de búsqueda de columnas
+         * 
+         * @var string $pattern
+         */
+        $pattern = "/^[a-z][a-z0-9_]+$/i";
+
+        /**
+         * Columnas seleccionadas de una tabla
+         * 
+         * @var array<string> $columns
+         */
+        $columns = explode(",", $field);
+
+        foreach ($columns as &$column) {
+            $column = trim($column);
+
+            if (empty($column)) {
+                continue;
+            }
+
+            /**
+             * Indica si el nombre de columna es inválido
+             * 
+             * @var boolean $is_valid
+             */
+            $is_valid = preg_match($pattern, $column);
+
+            if (!$is_valid) {
+                throw new Error("El nombre de la columna es inválido", 103);
+            }
+        }
+
+        static::$order_by = $columns;
+        static::$order = $type;
+    }
+
 }

@@ -20,9 +20,9 @@ trait DLQueryBuilder {
      * @param integer $start Indica la cantidad de registros a mostrar si es la única con valor, de lo contrario, indica
      * desde dónde empezar.
      * @param integer|null $rows Opcional. Indica la cantidad de registros a mostrar.
-     * @return self
+     * @return static
      */
-    public function limit(int $start, ?int $rows = null): self {
+    public function limit(int $start, ?int $rows = null): static {
         if ($start < 0) {
             return $this;
         }

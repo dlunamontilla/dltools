@@ -5,7 +5,6 @@ namespace DLTools\Test;
 use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
 use DLRoute\Server\DLServer;
-use DLTools\Auth\DLAuth;
 use DLTools\Compilers\DLView;
 use DLTools\HttpRequest\SendMail;
 use DLTools\Tests\Category;
@@ -59,12 +58,12 @@ final class TestController extends Controller {
      * @return array
      */
     public function get_users(object $params): array {
-        new Users;
-        new Products;
+        Users::set_order('users_id', 'desc');
 
         return [
-            "products" => Products::paginate(2, 2),
+            "products" => Products::paginate(1, 2),
             "users" => Users::get(),
+            "paginate" => Users::paginate(1, 2),
             "count" => Users::count()
         ];
     }

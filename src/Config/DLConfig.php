@@ -4,7 +4,6 @@ namespace DLTools\Config;
 
 use DLRoute\Requests\DLOutput;
 use Error;
-use ErrorException;
 use Exception;
 use PDO;
 use PDOException;

@@ -13,7 +13,7 @@ trait DLValues {
      *
      * @var array
      */
-    protected array $values = [];
+    protected static array $values = [];
 
     /**
      * Devuelve el valor de un campo seleccionado.
