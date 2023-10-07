@@ -122,16 +122,14 @@ class SendMail {
          * 
          * @var string $subject
          */
-        $subject = $this->sanitizeString(
-            $this->get_input('subject') ?? ''
-        );
+        $subject = trim($subject);
 
         /**
          * Cuerpo del mensaje.
          * 
          * @var string $body
          */
-        $body = trim($this->get_required('body'));
+        $body = trim($body);
         $body = $this->decodeString($body);
 
         if ($this->markdown) {
