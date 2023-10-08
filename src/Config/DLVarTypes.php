@@ -173,6 +173,10 @@ trait DLVarTypes {
             return false;
         }
 
+        if (preg_match("/[^a-z]$/", $input)) {
+            return false;
+        }
+
         return true;
     }
 
