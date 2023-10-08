@@ -31,6 +31,13 @@ final class Environment {
      */
     private ?Credentials $credentials = null;
 
+    /**
+     * Variables de entorno
+     *
+     * @var array|null
+     */
+    private ?array $environment = null;
+
     public function __construct() {
         $this->parse_file();
 
@@ -40,6 +47,8 @@ final class Environment {
          * @var object $environment
          */
         $environment = $this->get_environments_as_object();
+
+        $this->environment = (array) $environment;
 
         $this->credentials = Credentials::get_instance(
             $environment
@@ -72,5 +81,29 @@ final class Environment {
         }
 
         return $this->credentials;
+    }
+
+    /**
+     * Obtiene el valor de una variable de entorno.
+     *
+     * @param string $varname El nombre de la variable de entorno que se desea obtener.
+     * @return string El valor de la variable de entorno si existe, o una cadena vacía si no se encuentra.
+     */
+    public function get_env_value(string $varname): string {
+        /**
+         * Valor de la variable de entorno
+         * 
+         * @var string $value
+         */
+        $value = "";
+
+        if (
+            array_key_exists($varname, $this->environment) &&
+            array_key_exists('value', $this->environment[$varname])
+        ) {
+            $value = $this->environment[$varname]['value'];
+        }
+
+        return trim($value);
     }
 }
