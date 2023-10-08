@@ -319,7 +319,7 @@ trait DLValues {
      * @return void
      */
     private function error_requirenment(string $message): void {
-        header("Content-Type: application/json; charset=utf-8", true, 500);
+        header("Content-Type: application/json; charset=utf-8", true, 422);
 
         echo DLOutput::get_json([
             "status" => false,
@@ -336,7 +336,7 @@ trait DLValues {
      * @return void
      */
     private function invalid_type(mixed $message): void {
-        header("Content-Type: application/json; charset=utf-8", true, 500);
+        header("Content-Type: application/json; charset=utf-8", true, 400);
 
         echo DLOutput::get_json([
             "status" => false,

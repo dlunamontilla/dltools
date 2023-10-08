@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "homepage": "https://aprendiendo.netlify.app/",
-    "version": "v0.0.24",
+    "version": "v0.0.25",
     "autoload": {
         "psr-4": {
             "DLTools\\": "src/"
