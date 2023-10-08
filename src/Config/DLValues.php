@@ -92,7 +92,7 @@ trait DLValues {
      * Devuelve un valor numérico, sea entero, o de punto flotante.
      *
      * @param string $field Campo del formulario
-     * @return void
+     * @return float | int
      */
     public function get_numeric(string $field): float | int {
 
