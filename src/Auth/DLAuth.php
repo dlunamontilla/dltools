@@ -401,7 +401,7 @@ class DLAuth implements AuthInterface {
      *
      * @return array
      */
-    protected function get_auth(): array {
+    public function get_auth(): array {
         /**
          * Devuelve un token de usuario.
          * 
