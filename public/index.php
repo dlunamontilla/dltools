@@ -56,4 +56,12 @@ DLRoute::get('/', function (object $params) {
     ]);
 });
 
+$auth = DLAuth::get_instance();
+
+$auth->logged(function() {
+    DLRoute::get('/ciencia', function(object $params) {
+        return $params;
+    });
+});
+
 DLRoute::execute();

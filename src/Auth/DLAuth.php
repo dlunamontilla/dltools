@@ -551,7 +551,10 @@ class DLAuth implements AuthInterface {
             return;
         }
         
+
         if ($is_new && !$allow) {
+            header("Content-Type: application/json; charset=utf-8", true, $code);
+
             DLRoute::{$method_name}(
                 "{$route}",
                 [Unauthorized::class, $code === 401 ? 'unauthorized' : 'forbidden']
