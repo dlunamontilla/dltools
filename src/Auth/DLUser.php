@@ -112,6 +112,4 @@ abstract class DLUser extends Model {
     public function get_password(): ?string {
         return $this->password;
     }
-
-
 }

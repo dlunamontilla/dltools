@@ -199,4 +199,24 @@ final class TestController extends Controller {
 
         return $view;
     }
+
+    public function auth(): array {
+        $users = new Users;
+
+        $saved = $users->capture_credentials();
+        
+        if (!$saved) {
+            http_response_code(401);
+            
+            return [
+                "status" => false,
+                "error" => "No se ha loggeado"
+            ];
+        }
+
+        return [
+            "status" => true,
+            "success" => "Se ha loggeado"
+        ];
+    }
 }

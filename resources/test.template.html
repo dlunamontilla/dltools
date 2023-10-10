@@ -9,7 +9,7 @@
 
     <style>
         :root {
-            background-color: #333333;
+            background-color: #0e1d38;
             color: silver;
 
             font-family: "Open Sans", sans-serif, arial;
@@ -38,21 +38,21 @@
         input,
         textarea {
             border: 1px solid rgba(255, 255, 255, 0.2);
-            background-color: #202020;
+            background-color: inherit;
         }
 
         button {
             border: 0;
-            background-color: #202020;
+            background-color: #0a1428;
             transition: 300ms ease;
         }
 
         button:hover {
-            background-color: #252525;
+            background-color: #0c1a36;
         }
 
         button:active {
-            background-color: #202020;
+            background-color: #0a1428;
             transition: none;
         }
 
@@ -65,7 +65,7 @@
         hr {
             margin: 30px auto;
             border: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.092);
         }
 
         pre {
@@ -80,6 +80,26 @@
         pre:not(:last-of-type) {
             margin-bottom: 30px;
         }
+
+        .markdown {
+            background-color: #0002;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #fff1;
+            box-shadow: 2px 2px 0 2px #fff1
+        }
+
+        .markdown h1,
+        .markdown h2 {
+            margin: 0;
+        }
+        
+        .markdown h1 {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #fff1;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -91,20 +111,20 @@
         <pre>{{ $basedir }}</pre>
 
         @if ($authenticted)
-            <pre>@json($_SERVER, 'pretty')</pre>
+        <pre>@json($_SERVER, 'pretty')</pre>
         @endif
         <hr>
 
         @if ($files)
-            <h2>Datos de los archivos</h2>
-            @json($files, 'pretty')
+        <h2>Datos de los archivos</h2>
+        @json($files, 'pretty')
         @endif
 
         <hr>
 
         @if ($uploads)
-            <h2>Instancia de clase</h2>
-            @json($uploads, 'pretty')
+        <h2>Instancia de clase</h2>
+        @json($uploads, 'pretty')
         @endif
 
         <form action="" method="post">
@@ -119,7 +139,7 @@
 
 
         @if ($info)
-            <h3>Se ha creado un nuevo usuario</h3>
+        <h3>Se ha creado un nuevo usuario</h3>
         @endif
 
         <hr>
@@ -127,7 +147,7 @@
         <h2>Query</h2>
 
         @if ($query)
-            <p><code>$query: {{ $query }}</code></p>
+        <p><code>$query: {{ $query }}</code></p>
         @endif
 
         <div class="validate-session">
@@ -143,12 +163,12 @@
         </div>
 
         @if ($isValid)
-            <h3>Se ha validado</h3>
+        <h3>Se ha validado</h3>
         @endif
 
         @if ($authenticted)
-            <h3>Su sesión se encuentra iniciada</h3>
-            <pre>{{ $username }}</pre>
+        <h3>Su sesión se encuentra iniciada</h3>
+        <pre>{{ $username }}</pre>
         @endif
 
         <hr>
@@ -200,7 +220,9 @@
 
         <hr>
 
-        @markdown('test')
+        <div class="markdown">
+            @markdown('test')
+        </div>
 
         <hr>
 

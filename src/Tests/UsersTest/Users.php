@@ -6,7 +6,7 @@ use DLTools\Auth\DLUser;
 
 class Users extends DLUser {
 
-    public function capture_credentials(): void {
+    public function capture_credentials(): bool {
         /**
          * Autenticación del usuario
          * 
@@ -22,7 +22,7 @@ class Users extends DLUser {
             $this->get_required('password')
         );
         
-        $auth->auth($this, [
+        return $auth->auth($this, [
             "username_field" => 'username',
             "password_field" => 'password',
             "token_field" => 'token'
