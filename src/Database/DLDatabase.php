@@ -4,11 +4,8 @@ namespace DLTools\Database;
 
 use DLTools\Config\DLConfig;
 use Error;
-use Exception;
 use PDO;
 use PDOException;
-use PDOStatement;
-use phpDocumentor\Reflection\PseudoTypes\LowercaseString;
 
 /**
  * Esta clase se está reescribiendo...
@@ -528,7 +525,7 @@ class DLDatabase {
         $stmt = $this->pdo->prepare($query);
         $stmt->execute();
 
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $data !== FALSE
             ? $data
@@ -582,7 +579,7 @@ class DLDatabase {
         $stmt = $this->pdo->prepare($query);
         $stmt->execute();
 
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($data)
             ? $data
@@ -597,6 +594,13 @@ class DLDatabase {
      * @return void
      */
     public function count(string $column = "*", bool $test = false): string | array {
+        /**
+         * Indica una condicional
+         * 
+         * @var string $where
+         */
+        $where = trim($this->where);
+
         $column = trim($column);
         $columnName = $column !== "*" ? $column : 'count';
 
@@ -606,15 +610,19 @@ class DLDatabase {
 
         $this->table = trim($this->table);
         $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table}";
+        
+        if (!empty($where)) {
+            $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table} {$where}";
+        }
 
         if ($test) {
             return trim($query);
         }
 
         $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
+        $stmt->execute($this->param);
 
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return is_array($data)
             ? $data

@@ -242,8 +242,8 @@ class DatabaseTest extends TestCase {
     }
 
     public function testCustomerQuery(): void {
-        $expected = "SELECT * FROM WHERE username = :username OR email = :email";
-        $actual = $this->database->query("SELECT * FROM WHERE username = :username OR email = :email")->get_query();
+        $expected = "SELECT * FROM Tabla WHERE username = :username OR email = :email";
+        $actual = $this->database->query("SELECT * FROM Tabla WHERE username = :username OR email = :email")->get_query();
 
         $this->assertSame($expected, $actual);
     }

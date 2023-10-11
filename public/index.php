@@ -1,5 +1,6 @@
 <?php
 use DLTools\Auth\DLAuth;
+use DLTools\Test\TestController;
 
 ini_set('display_errors', 1);
 
@@ -63,5 +64,10 @@ $auth->logged(function() {
         return $params;
     });
 });
+
+DLRoute::get('/test/{page}/{rows}', [TestController::class, 'test'])->filter_by_type([
+    "page" => "integer",
+    "rows" => "integer"
+]);
 
 DLRoute::execute();

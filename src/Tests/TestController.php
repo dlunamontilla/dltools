@@ -219,4 +219,9 @@ final class TestController extends Controller {
             "success" => "Se ha loggeado"
         ];
     }
+
+    public function test(object $params): array {
+        $users = Users::where('ID', 12)->order_by('ID')->desc()->paginate($params->page, $params->rows);
+        return $users;
+    }
 }
