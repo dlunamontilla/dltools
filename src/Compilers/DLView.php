@@ -100,6 +100,8 @@ class DLView {
 
         $stringTemplate = self::template($view);
 
+        $stringTemplate = self::trim_quote($stringTemplate);
+
         $filename = base64_encode($view) . ".php";
 
         foreach ($data as $key => $variable) {
@@ -145,5 +147,16 @@ class DLView {
 
         $message = "<style>:root {background-color: #333333}</style><h3 {$styles}>La plantilla <strong style=\"padding: 10px\">{$template}</strong> {$message}</h3>\n\n";
         return $message;
+    }
+
+    /**
+     * Elimina las comillas
+     *
+     * @param string $string
+     * @return string
+     */
+    public static function trim_quote(string $string): string {
+        $string = trim($string, "\"\'\`");
+        return $string;
     }
 }
