@@ -55,7 +55,7 @@ class SendMail {
 
     public function __construct() {
         $request = DLRequest::get_instance();
-        $this->values = $request->get_values();
+        static::$values = $request->get_values();
     }
 
     /**
