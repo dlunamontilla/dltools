@@ -3,6 +3,7 @@ namespace DLTools\Auth;
 
 use DLRoute\Requests\DLOutput;
 use DLRoute\Requests\DLRoute;
+use DLRoute\Routes\RouteDebugger;
 use DLRoute\Server\DLServer;
 use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
@@ -319,7 +320,7 @@ class DLAuth implements AuthInterface {
 
     public function logged(callable $callback): void {
         $logged = $this->is_logged();
-        $this->restrict_route($callback, $logged, 401);
+        $this->restrict_route($callback, $logged, 403);
     }
 
     public function not_logged(callable $callback): void {
@@ -492,11 +493,12 @@ class DLAuth implements AuthInterface {
      * @param callable $callback Registra las rutas en los métodos de autenticación
      * @param boolean $allow Indica si se desea permitir o no la ruta previamente registrada
      * @param integer|null $code Código de estado
+     * @param string|null $redirect_to Redirige a una ruta específica
      * @return void
      */
-    protected function restrict_route(callable $callback, bool $allow = true, ?int $code = null): void {
-        if (!is_null($code) && $code !== 401 && $code !== 403) {
-            throw new Error("Solo se permiten los valores numéricos 401 y 403", 500);
+    protected function restrict_route(callable $callback, bool $allow = true, ?int $code = null, ?string $redirect_to = null): void {
+        if ($code !== 401 && $code !== 403 && $code !== 301 && $code !== 302) {
+            throw new Error("Solo se permiten los valores numéricos 401, 403, 301 y 302", 500);
         }
         
         /**
@@ -553,6 +555,26 @@ class DLAuth implements AuthInterface {
         
 
         if ($is_new && !$allow) {
+            if (!is_null($redirect_to)) {
+                $redirect_to = RouteDebugger::trim_slash($redirect_to);
+
+                /**
+                 * Ruta base HTTP.
+                 * 
+                 * @var string $http
+                 */
+                $http = DLServer::get_base_url();
+                $http = RouteDebugger::trim_slash($http);
+                /**
+                 * URL completa de la aplicación
+                 * 
+                 * @var string $route
+                 */
+                $url = "{$http}/{$redirect_to}";
+
+                header("Location: {$url}", true, $code);
+            }
+
             header("Content-Type: application/json; charset=utf-8", true, $code);
 
             DLRoute::{$method_name}(
