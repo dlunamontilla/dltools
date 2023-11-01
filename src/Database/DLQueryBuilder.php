@@ -1,7 +1,6 @@
 <?php
 
 namespace DLTools\Database;
-use Error;
 
 /**
  * Ayuda a validar las entradas del usuario.
@@ -39,8 +38,13 @@ trait DLQueryBuilder {
         return $this;
     }
 
+    /**
+     * Todavía no disponible, pero se utilizará para unir tablas en el constructor de consultas
+     *
+     * @param string $table
+     * @return self
+     */
     public function inner(string $table): self {
-
         return $this;
     }
 

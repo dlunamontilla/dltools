@@ -151,7 +151,7 @@ class DLDatabase {
      * Elimina registros de una tabla
      *
      * @param boolean $test
-     * @return void
+     * @return string|bool
      */
     public function delete(bool $test = false): string | bool {
         /**
@@ -349,7 +349,7 @@ class DLDatabase {
      *
      * @param array $fields Campos del formulario
      * @param bool $test Se define si se ejecutará en modo de prueba o en modo real
-     * @return self
+     * @return string | bool
      */
     public function insert(array $fields, bool $test = false): string | bool {
         $table = $this->table;
@@ -434,7 +434,7 @@ class DLDatabase {
     /**
      * Opciones de la consulta
      *
-     * @return string
+     * @return void
      */
     private function set_options(): void {
         $options = [];
@@ -511,7 +511,7 @@ class DLDatabase {
      * @param boolean $test
      * @return string | array
      */
-    public function last(string $column, bool $test = false): array | string {
+    public function last(string $column, bool $test = false): string | array {
         $this->queryLast = "LAST";
         $this->column = trim($column);
 
@@ -591,7 +591,7 @@ class DLDatabase {
      *
      * @param string $column
      * @param boolean $test
-     * @return void
+     * @return string | array
      */
     public function count(string $column = "*", bool $test = false): string | array {
         /**
