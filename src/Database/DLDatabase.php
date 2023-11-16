@@ -95,54 +95,50 @@ class DLDatabase {
          */
         $completed = false;
 
-        try {
-            if ($this->empty($fields)) {
-                throw new Error("Especifique los campos a modificar\n<br>");
-            }
-
-            if ($this->empty($this->table)) {
-                throw new Error("Debe seleccionar la tabla que desea modificar");
-            }
-
-            $this->set_options();
-
-            $newFields = [];
-            $params = [];
-
-            foreach ($fields as $field => $value) {
-                $key = ":" . $field;
-
-
-                if (array_key_exists($key, $this->param)) {
-                    array_push($newFields, "{$field} = {$key}_v");
-                    $this->param[$key . "_v"] = $value;
-
-                    continue;
-                }
-
-                array_push($newFields, "{$field} = {$key}");
-                $this->param[$key] = $value;
-            }
-
-            $params = $this->param;
-            $query = "UPDATE {$this->table} SET " . join(", ", $newFields);
-
-            if (!($this->empty($this->options))) {
-                $query .= $this->options;
-            }
-
-            $this->clean();
-
-            if ($test) {
-                return $query;
-            }
-
-            $stmt = $this->pdo->prepare($query);
-
-            $completed = $stmt->execute($params);
-        } catch (PDOException | Error $error) {
-            $this->exception($error);
+        if ($this->empty($fields)) {
+            throw new Error("Especifique los campos a modificar\n<br>");
         }
+
+        if ($this->empty($this->table)) {
+            throw new Error("Debe seleccionar la tabla que desea modificar");
+        }
+
+        $this->set_options();
+
+        $newFields = [];
+        $params = [];
+
+        foreach ($fields as $field => $value) {
+            $key = ":" . $field;
+
+
+            if (array_key_exists($key, $this->param)) {
+                array_push($newFields, "{$field} = {$key}_v");
+                $this->param[$key . "_v"] = $value;
+
+                continue;
+            }
+
+            array_push($newFields, "{$field} = {$key}");
+            $this->param[$key] = $value;
+        }
+
+        $params = $this->param;
+        $query = "UPDATE {$this->table} SET " . join(", ", $newFields);
+
+        if (!($this->empty($this->options))) {
+            $query .= $this->options;
+        }
+
+        $this->clean();
+
+        if ($test) {
+            return $query;
+        }
+
+        $stmt = $this->pdo->prepare($query);
+
+        $completed = $stmt->execute($params);
 
         return $completed;
     }
@@ -161,23 +157,19 @@ class DLDatabase {
          */
         $completed = false;
 
-        try {
-            $this->delete = "DELETE";
+        $this->delete = "DELETE";
 
-            $query = $this->get_query();
-            $param = $this->param;
+        $query = $this->get_query();
+        $param = $this->param;
 
-            $this->clean();
+        $this->clean();
 
-            if ($test) {
-                return $query;
-            }
-
-            $stmt = $this->pdo->prepare($query);
-            $completed = $stmt->execute($param);
-        } catch (PDOException $error) {
-            $this->exception($error);
+        if ($test) {
+            return $query;
         }
+
+        $stmt = $this->pdo->prepare($query);
+        $completed = $stmt->execute($param);
 
         return $completed;
     }
@@ -207,27 +199,23 @@ class DLDatabase {
          */
         $data = [];
 
-        try {
-            if (!$this->custom) {
-                $this->get_query();
-            }
-
-            if ($this->custom) {
-                $this->param = $param;
-            }
-
-            if ($this->empty($this->query)) {
-                $this->select();
-            }
-
-            $stmt = $this->pdo->prepare($this->query);
-            $stmt->execute($this->param);
-
-            $this->clean();
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException | Error $error) {
-            $this->exception($error);
+        if (!$this->custom) {
+            $this->get_query();
         }
+
+        if ($this->custom) {
+            $this->param = $param;
+        }
+
+        if ($this->empty($this->query)) {
+            $this->select();
+        }
+
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->param);
+
+        $this->clean();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return $data;
     }
@@ -241,32 +229,28 @@ class DLDatabase {
     public function first(array $param = []): array {
         $data = [];
 
-        try {
-            if (!$this->custom) {
-                $this->get_query();
-            }
-
-            if ($this->custom) {
-                $this->param = $param;
-            }
-
-            if ($this->empty($this->query)) {
-                $this->select();
-            }
-
-            if ($this->empty($this->query)) {
-                throw new Error("La consulta SQL no puede estar vacía");
-            }
-
-            $stmt = $this->pdo->prepare($this->query);
-            $stmt->execute($this->param);
-
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $this->clean();
-        } catch (PDOException $error) {
-            $this->exception($error);
+        if (!$this->custom) {
+            $this->get_query();
         }
+
+        if ($this->custom) {
+            $this->param = $param;
+        }
+
+        if ($this->empty($this->query)) {
+            $this->select();
+        }
+
+        if ($this->empty($this->query)) {
+            throw new Error("La consulta SQL no puede estar vacía");
+        }
+
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->param);
+
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $this->clean();
 
         return $data !== FALSE
             ? $data

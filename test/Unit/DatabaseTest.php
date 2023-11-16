@@ -15,10 +15,6 @@ class DatabaseTest extends TestCase {
         $this->database = DLDatabase::get_instance();
     }
 
-    public function test_true(): void {
-        $this->assertTrue(true);
-    }
-
     /**
      * @test Evalúa la función `$this->database->from('tabla')` para asegurar de que funcione
      * correctamente.
@@ -135,6 +131,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testDeleteWhereLike(): void {
+        $this->database->clean();
         $expected = "DELETE FROM products WHERE name LIKE :name";
         $actual = $this->database->from('products')->where('name', 'like', 'valor')->delete(true);
 
@@ -142,6 +139,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testDelete(): void {
+        $this->database->clean();
         $expected = "DELETE FROM products";
         $actual = $this->database->from('products')->delete(true);
 
@@ -149,6 +147,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testLast(): void {
+        $this->database->clean();
         $expected = "SELECT * FROM products WHERE id = (SELECT MAX(id) FROM products) LIMIT 1";
         $actual = $this->database->from('products')->last('id', true);
 
@@ -156,6 +155,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testMax(): void {
+        $this->database->clean();
         $expected = "SELECT MAX(id) AS id FROM products";
         $actual = $this->database->from('products')->max('id', true);
 
@@ -168,6 +168,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testMin(): void {
+        $this->database->clean();
         $expected = 'SELECT MIN(id) AS id FROM products';
         $actual = $this->database->from('products')->min('id', true);
 
@@ -175,6 +176,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testCount(): void {
+        $this->database->clean();
         $expected = 'SELECT COUNT(*) AS count FROM products';
         $actual = $this->database->from('products')->count('*', true);
 
@@ -187,6 +189,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testorder_by(): void {
+        $this->database->clean();
         $expected = "SELECT * FROM products ORDER BY name";
         $actual = $this->database->from('products')->order_by('name')->get_query();
 
@@ -194,6 +197,7 @@ class DatabaseTest extends TestCase {
     }
 
     public function testAsc(): void {
+        $this->database->clean();
         $expected = "SELECT * FROM products ORDER BY name ASC";
         $actual = $this->database->from('products')->order_by('name')->asc()->get_query();
 
