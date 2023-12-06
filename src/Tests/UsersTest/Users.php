@@ -5,8 +5,10 @@ use DLTools\Auth\DLAuth;
 use DLTools\Auth\DLUser;
 
 class Users extends DLUser {
+    // protected static ?string $table = "ciencia";
 
     public function capture_credentials(): bool {
+
         /**
          * Autenticación del usuario
          * 

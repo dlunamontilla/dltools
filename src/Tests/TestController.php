@@ -221,7 +221,14 @@ final class TestController extends Controller {
     }
 
     public function test(object $params): array {
-        $users = Users::where('ID', 12)->order_by('ID')->desc()->paginate($params->page, $params->rows);
-        return $users;
+        $users = Users::order_by('created_at')->desc()->paginate($params->page, $params->rows);
+        $products = Products::first();
+        $first = Users::first();
+
+        return [
+            "users" => $users,
+            "first" => $first,
+            "products" => $products
+        ];
     }
 }

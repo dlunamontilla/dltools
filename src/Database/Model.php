@@ -65,6 +65,15 @@ abstract class Model {
     }
 
     /**
+     * Limpia el nombre de la tabla. Se debe utilizar por cada consulta completada
+     *
+     * @return void
+     */
+    private static function clear_table(): void {
+        static::$table = null;
+    }
+
+    /**
      * Permite establecer propiedad y valor a cualquier clase heredada.
      * 
      * @param string $field Campo
@@ -125,6 +134,13 @@ abstract class Model {
          */
         $class = end($parts);
 
+        /**
+         * Nombre de la tabla en el caso de que no se tome por el nombre de la clase
+         * 
+         * @var string|null $table_name
+         */
+        $table_name = null;
+
         if (!is_string($class)) {
             return;
         }
@@ -138,7 +154,7 @@ abstract class Model {
         $found = preg_match_all('/[A-Z][a-z]+/', $class, $matches);
 
         if (!$found) {
-            return;
+            $table_name = strtolower($classname);
         }
 
         /**
@@ -158,6 +174,10 @@ abstract class Model {
         $table = trim($table);
 
         $table = "{$prefix}{$table}";
+
+        if (!is_null($table_name)) {
+            $table = $table_name;
+        }
 
         static::$table = $table;
     }
@@ -226,6 +246,7 @@ abstract class Model {
             $data = static::$db->from(static::$table)->select(...$fields)->limit(100)->get();
         }
 
+        static::clear_table();
         return $data;
     }
 
@@ -258,6 +279,7 @@ abstract class Model {
          */
         $it_was_inserted = static::$db->from(static::$table)->insert($fields);
 
+        static::clear_table();
         return $it_was_inserted;
     }
 
@@ -268,7 +290,6 @@ abstract class Model {
      * @return boolean
      */
     public static function create(array $fields): bool {
-        static::init();
         return static::insert($fields);
     }
 
@@ -282,7 +303,9 @@ abstract class Model {
      */
     public static function where(string $field, string $operator, ?string $value = null): DLDatabase {
         static::init();
-        return static::$db->from(static::$table)->where($field, $operator, $value);
+        $db = static::$db->from(static::$table)->where($field, $operator, $value);
+        static::clear_table();
+        return $db;
     }
 
     /**
@@ -294,7 +317,9 @@ abstract class Model {
      */
     public static function select(array|string $fields = "*", string ...$other_fields): DLDatabase {
         static::init();
-        return static::$db->from(static::$table)->select($fields, ...$other_fields);
+        $db = static::$db->from(static::$table)->select($fields, ...$other_fields);
+        static::clear_table();
+        return $db;
     }
 
     /**
@@ -306,9 +331,12 @@ abstract class Model {
     public static function first(string ...$fields): array {
         static::init();
 
-        return static::$db->from(static::$table)
+        $data = static::$db->from(static::$table)
             ->select(...$fields)
             ->first();
+
+        static::clear_table();
+        return $data;
     }
 
     /**
@@ -326,6 +354,7 @@ abstract class Model {
          */
         $data = static::$db->from(static::$table)->count();
 
+        static::clear_table();
         return $data['count'] ?? 0;
     }
 
@@ -351,7 +380,10 @@ abstract class Model {
      */
     public static function order_by(string ...$column): DLDatabase {
         static::init();
-        return static::$db->from(static::$table)->order_by(...$column);
+        $db = static::$db->from(static::$table)->order_by(...$column);
+
+        static::clear_table();
+        return $db;
     }
 
     /**
@@ -456,6 +488,7 @@ abstract class Model {
             "register" => $register
         ];
 
+        static::clear_table();
         return $data;
     }
 
@@ -465,7 +498,7 @@ abstract class Model {
      * @return void
      */
     protected static function init(): void {
-        static::set_table_name(static::class);
+        static::set_table_name(static::$table ?? static::class);
 
         /**
          * Peticiones de usuario.
