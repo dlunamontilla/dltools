@@ -175,6 +175,7 @@ class DLDatabase {
     }
 
     public function from(string $table): self {
+        $this->clean();
         $this->table = trim($table);
 
         $empty = empty($this->select) && empty($this->update) && empty($this->delete) && empty($this->insert);
