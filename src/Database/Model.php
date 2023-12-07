@@ -26,6 +26,18 @@ abstract class Model {
     use DLConfig;
 
     /**
+     * Operador AND para una consulta SQL
+     * 
+     * @var string
+     */
+    public const AND = 'AND';
+
+    /**
+     * @var string Operador OR
+     */
+    public const OR = 'OR';
+
+    /**
      * Nombre de la tabla de la base de datos.
      *
      * @var string|null
@@ -298,13 +310,17 @@ abstract class Model {
      *
      * @param string $field Campo de la tabla
      * @param string $operator Operador de comparación. El operador puede ser tomado como valor si se pasan dos argumentos.
-     * @param string|null $value Opcional. Valor a ser evaluado
+     * @param string|null $value Opcional. Valor a ser evaluado,
+     * @param string $logical_operator Operador lógico
      * @return DLDatabase
      */
-    public static function where(string $field, string $operator, ?string $value = null): DLDatabase {
+    public static function where(string $field, string $operator, ?string $value = null, string $logical_operator = self::AND): DLDatabase {
         static::init();
-        $db = static::$db->from(static::$table)->where($field, $operator, $value);
+        $logical_operator = strtoupper($logical_operator);
+
+        $db = static::$db->from(static::$table)->where($field, $operator, $value, $logical_operator);
         static::clear_table();
+
         return $db;
     }
 
