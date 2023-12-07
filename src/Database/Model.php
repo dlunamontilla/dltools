@@ -38,11 +38,18 @@ abstract class Model {
     public const OR = 'OR';
 
     /**
-     * Nombre de la tabla de la base de datos.
+     * Nombre de tabla definida por el programador
      *
      * @var string|null
      */
     protected static ?string $table = null;
+
+    /**
+     * Tabla predeterminada
+     *
+     * @var string|null
+     */
+    protected static ?string $table_default = null;
 
     /**
      * Campos de una tabla de la base de datos.
@@ -82,7 +89,7 @@ abstract class Model {
      * @return void
      */
     private static function clear_table(): void {
-        static::$table = null;
+        static::$table_default = null;
     }
 
     /**
@@ -191,7 +198,7 @@ abstract class Model {
             $table = $table_name;
         }
 
-        static::$table = $table;
+        static::$table_default = $table;
     }
 
     /**
@@ -246,7 +253,7 @@ abstract class Model {
                 throw new Error("Solo se permiten `desc` o `asc`");
             }
 
-            $data = static::$db->from(static::$table)
+            $data = static::$db->from(static::$table_default)
                         ->select(...$fields)
                         ->order_by(...static::$order_by)
                 ->{static::$order}()
@@ -255,7 +262,7 @@ abstract class Model {
         }
 
         if (count($data) < 1) {
-            $data = static::$db->from(static::$table)->select(...$fields)->limit(100)->get();
+            $data = static::$db->from(static::$table_default)->select(...$fields)->limit(100)->get();
         }
 
         static::clear_table();
@@ -289,7 +296,7 @@ abstract class Model {
          * 
          * @var boolean
          */
-        $it_was_inserted = static::$db->from(static::$table)->insert($fields);
+        $it_was_inserted = static::$db->from(static::$table_default)->insert($fields);
 
         static::clear_table();
         return $it_was_inserted;
@@ -318,7 +325,7 @@ abstract class Model {
         static::init();
         $logical_operator = strtoupper($logical_operator);
 
-        $db = static::$db->from(static::$table)->where($field, $operator, $value, $logical_operator);
+        $db = static::$db->from(static::$table_default)->where($field, $operator, $value, $logical_operator);
         static::clear_table();
 
         return $db;
@@ -333,7 +340,7 @@ abstract class Model {
      */
     public static function select(array|string $fields = "*", string ...$other_fields): DLDatabase {
         static::init();
-        $db = static::$db->from(static::$table)->select($fields, ...$other_fields);
+        $db = static::$db->from(static::$table_default)->select($fields, ...$other_fields);
         static::clear_table();
         return $db;
     }
@@ -347,7 +354,7 @@ abstract class Model {
     public static function first(string ...$fields): array {
         static::init();
 
-        $data = static::$db->from(static::$table)
+        $data = static::$db->from(static::$table_default)
             ->select(...$fields)
             ->first();
 
@@ -368,7 +375,7 @@ abstract class Model {
          * 
          * @var array
          */
-        $data = static::$db->from(static::$table)->count();
+        $data = static::$db->from(static::$table_default)->count();
 
         static::clear_table();
         return $data['count'] ?? 0;
@@ -396,9 +403,10 @@ abstract class Model {
      */
     public static function order_by(string ...$column): DLDatabase {
         static::init();
-        $db = static::$db->from(static::$table)->order_by(...$column);
 
+        $db = static::$db->from(static::$table_default)->order_by(...$column);
         static::clear_table();
+        
         return $db;
     }
 
@@ -473,7 +481,7 @@ abstract class Model {
             }
 
             $register = static::$db
-                ->from(static::$table)
+                ->from(static::$table_default)
                 ->order_by(...static::$order_by)
                 ->{static::$order}()
                 ->limit($start, $rows)
@@ -481,7 +489,7 @@ abstract class Model {
         }
 
         if (count($register) < 1) {
-            $register = static::$db->from(static::$table)->limit($start, $rows)->get();
+            $register = static::$db->from(static::$table_default)->limit($start, $rows)->get();
         }
 
         if ($quantity <= 0) {
