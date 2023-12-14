@@ -84,8 +84,8 @@ class DLTemplate {
      * @return string
      */
     private static function parserConditionals(string $stringTemplate): string {
-        $conditionlsOpen = '/@if{1}.*\n*$/m';
-        $conditionalsClose = '/@endif{1}\n*$/m';
+        $conditionlsOpen = '/@if{1}.*\n*$/mi';
+        $conditionalsClose = '/\@endif|\@endif\n$/mi';
         $else = '/(@else)+\s*if+\s*/m';
 
         $stringTemplate = trim($stringTemplate);
