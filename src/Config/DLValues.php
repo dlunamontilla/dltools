@@ -56,7 +56,7 @@ trait DLValues {
         }
 
         if (is_null($value) || !($this->is_email($value))) {
-            $this->invalid_type("{$value} no es un formato válido de correo");
+            $this->invalid_type("«{$value}» No es un formato válido de correo en {$field}");
         }
 
         return $value;
