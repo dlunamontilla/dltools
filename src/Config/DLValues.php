@@ -56,7 +56,7 @@ trait DLValues {
         }
 
         if (is_null($value) || !($this->is_email($value))) {
-            $this->invalid_type($value);
+            $this->invalid_type("{$value} no es un formato válido de correo");
         }
 
         return $value;
@@ -82,7 +82,7 @@ trait DLValues {
         }
 
         if (!($this->is_uuid($value))) {
-            $this->invalid_type($value);
+            $this->invalid_type("{$value} es un UUID inválido");
         }
 
         return $value;
@@ -110,7 +110,7 @@ trait DLValues {
         $is_valid = $this->is_integer($value) || $this->is_float($value);
 
         if (!$is_valid) {
-            $this->invalid_type($value);
+            $this->invalid_type("Se esperaba un valor numérico en {$field} en lugar de {$value}");
         }
 
         if ($this->is_integer($value)) {
@@ -140,7 +140,7 @@ trait DLValues {
         }
 
         if(!($this->is_integer($value))) {
-            $this->invalid_type($value);
+            $this->invalid_type("Se esparaba un tipo entero en {$field} en lugar de {$value}");
         }
 
         return (int) $value;
@@ -166,7 +166,7 @@ trait DLValues {
         }
 
         if (!($this->is_float($value))) {
-            $this->invalid_type($value);
+            $this->invalid_type("Se esperaba un número real en {$field} en lugar de {$value}");
         }
 
         return (float) $value;
@@ -192,7 +192,7 @@ trait DLValues {
         }
 
         if (!($this->is_boolean($value))) {
-            $this->invalid_type($value);
+            $this->invalid_type("El valor proporcionado, '{$value}', no cumple con el formato esperado para un booleano en el campo '{$field}'");
         }
 
         return (bool) $value;
@@ -215,7 +215,7 @@ trait DLValues {
         $value = static::$values[$field] ?? null;
 
         if (gettype($value) !== "string") {
-            $this->invalid_type($value);
+            $this->invalid_type("Se esperaba una cadena de texto en {$field}");
         }
 
         $value = trim($value, "\"\'");
@@ -271,7 +271,7 @@ trait DLValues {
         $value = static::$values[$field] ?? null;
 
         if (!is_string($value)) {
-            $this->invalid_type($value);
+            $this->invalid_type("La contraseña debe ser una cadena texto");
         }
 
         $value = trim($value);
@@ -300,13 +300,13 @@ trait DLValues {
         $value = static::$values[$field] ?? null;
         
         if (!is_string($value)) {
-            $this->invalid_type($value);
+            $this->invalid_type("Entrada inválida en {$field}");
         }
 
         $found = preg_match($pattern, $value);
 
         if (!$found) {
-            $this->invalid_type($value);
+            $this->invalid_type("Entrada no válida en {$field}, no cumple con los criterios esperados");
         }
 
         return $value;
@@ -340,8 +340,7 @@ trait DLValues {
 
         echo DLOutput::get_json([
             "status" => false,
-            "error" => "Tipo de datos incompatible",
-            "details" => $message
+            "error" => trim($message),
         ], true);
 
         exit;
