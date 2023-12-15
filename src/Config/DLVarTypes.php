@@ -149,7 +149,7 @@ trait DLVarTypes {
          * 
          * @var string
          */
-        $email_pattern = '/^[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_]+\.[a-z][a-z0-9-.]{1,10}$/';
+        $email_pattern = '/^[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_]+\.[a-z][a-z0-9-.]{1,10}$/i';
 
         /**
          * Resultado de un análisis previo hecho para validar un correo electrónico.
