@@ -414,105 +414,15 @@ abstract class Model {
      * Estable el un sistema de paginación en el modelo
      *
      * @param integer $page Número de página
-     * @param integer|null $rows Número de registros por páginas
+     * @param integer $rows Número de registros por páginas
      * @return array
      */
     public static function paginate(int $page = 1, int $rows = 100): array {
+
         static::init();
-
-        if ($page < 1) {
-            static::error("\$page debe ser mayor que cero (0)");
-        }
-
-        if ($rows < 1) {
-            static::error("\$rows debe ser mayor que cero (0)");
-        }
-
-        /**
-         * Identifica la cantidad de registros existentes.
-         * 
-         * @var integer $quantity
-         */
-        $quantity = static::count();
-
-        /**
-         * Cantidad de registro de comienzo.
-         * 
-         * @var int
-         */
-        $start = $rows * ($page - 1);
-
-        /**
-         * Número de paginas calculadas en función de la cantidad registros en la tabla
-         * divida por la cantidad de registros por página (`$rows`).
-         * 
-         * @var integer
-         */
-        $pages = ceil($quantity / $rows);
-
-        /**
-         * Registro de la consulta.
-         * 
-         * @var array
-         */
-        $register = [];
-
-        /**
-         * Datos vacío.
-         * 
-         * @var array $empty_data
-         */
-        $empty_data = [
-            "pages" => 1,
-            "page" => 1,
-            "pagination" => "1 de 1",
-            "rows" => 0,
-
-            "register" => []
-        ];
-
-        if ($quantity < 1) {
-            return $empty_data;
-        }
-
-        if (!is_null(static::$order_by)) {
-            if (static::$order !== "desc" && static::$order !== "asc") {
-                throw new Error("Solo se permiten `desc`o `asc`", 103);
-            }
-
-            $register = static::$db
-                ->from(static::$table_default)
-                ->order_by(...static::$order_by)
-                ->{static::$order}()
-                ->limit($start, $rows)
-                ->get();
-        }
-
-        if (count($register) < 1) {
-            $register = static::$db->from(static::$table_default)->limit($start, $rows)->get();
-        }
-
-        if ($quantity <= 0) {
-            $pages = 1;
-            $rows = 0;
-            $page = 1;
-        }
-
-        /**
-         * Datos de la consulta.
-         * 
-         * @var array $data
-         */
-        $data = [
-            "pages" => $pages,
-            "page" => $page,
-            "pagination" => "{$page} de {$pages}",
-            "rows" => $rows,
-
-            "register" => $register
-        ];
-
+        $data = static::$db->from(static::$table_default)->paginate($page, $rows);
         static::clear_table();
+
         return $data;
     }
 
