@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.26] - Fecha
+## [v0.1.27] - Fecha
 
 ### Cambios
 
@@ -10,8 +10,8 @@
 
 ### Cómo Actualizar
 
-Para integrar esta corrección en tu aplicación, actualiza tu versión de la biblioteca a la `v0.1.26`. Asegúrate de seguir las mejores prácticas de actualización de tu gestor de dependencias favorito.
+Para integrar esta corrección en tu aplicación, actualiza tu versión de la biblioteca a la `v0.1.27`. Asegúrate de seguir las mejores prácticas de actualización de tu gestor de dependencias favorito.
 
 ### Notas Adicionales
 
-- Si estás utilizando versiones anteriores a la `v0.1.26`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
+- Si estás utilizando versiones anteriores a la `v0.1.27`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
