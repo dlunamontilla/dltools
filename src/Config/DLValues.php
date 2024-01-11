@@ -64,7 +64,7 @@ trait DLValues {
 
     /**
      * Devuelve una cadena UUID a partir de la entrada de un usuario. Si la cadean
-     * UUID es inválido, devolverá un error de tipo.
+     * `UUIDv4` es inválido, devolverá un error de tipo.
      *
      * @param string $field Campo del formulario
      * @return string
@@ -79,6 +79,10 @@ trait DLValues {
 
         if (is_string($value)) {
             $value = trim($value);
+        }
+
+        if (is_null($value)) {
+            $this->invalid_type("El campo {$field} es requerido");
         }
 
         if (!($this->is_uuid($value))) {
@@ -110,7 +114,7 @@ trait DLValues {
         $is_valid = $this->is_integer($value) || $this->is_float($value);
 
         if (!$is_valid) {
-            $this->invalid_type("Se esperaba un valor numérico en {$field} en lugar de {$value}");
+            $this->invalid_type("Se esperaba un valor numérico en {$field}, en lugar de {$value}");
         }
 
         if ($this->is_integer($value)) {
@@ -214,12 +218,34 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? null;
 
-        if (gettype($value) !== "string") {
+        if (!is_string($value)) {
             $this->invalid_type("Se esperaba una cadena de texto en {$field}");
         }
 
         $value = trim($value, "\"\'");
         $value = trim($value);
+
+        return $value;
+    }
+
+    /**
+     * Devuelve un array a partir de la entrada de un cliente HTTP
+     *
+     * @param string $key Clave o propiedad del objeto `JSON` enviado
+     * @return array
+     */
+    public function get_array(string $key): array {
+        
+        /**
+         * Entrada del usuario
+         * 
+         * @var array|string|null
+         */
+        $value = static::$values[$key] ?? null;
+
+        if (!is_array($value)) {
+            $this->invalid_type("Se esperaba un array en " . print_r($value, true));
+        }
 
         return $value;
     }

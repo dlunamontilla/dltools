@@ -180,7 +180,18 @@ trait DLVarTypes {
         return true;
     }
 
-    protected function is_uuid(string $input): bool {
+    /**
+     * Determina si la entrada es una cadena UUID válida
+     *
+     * @param mixed $input entrada a ser analizada
+     * @return boolean
+     */
+    protected function is_uuid(mixed $input): bool {
+
+        if (!is_string($input)) {
+            $input = "";
+        }
+
         $input = trim($input);
 
         /**
