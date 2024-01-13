@@ -105,11 +105,13 @@ trait DLValues {
          * 
          * @var int|float|string|null
          */
-        $value = static::$values[$field] ?? null;
+        $value = static::$values[$field] ?? '';
 
-        if (is_string($value)) {
-            $value = trim($value);
+        if (!is_string($value)) {
+            $value = '';
         }
+
+        $value = trim($value);
 
         $is_valid = $this->is_numeric($value);
 
@@ -139,9 +141,11 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? null;
 
-        if (is_string($value)) {
-            $value = trim($value);
+        if (!is_string($value)) {
+            $value = '';
         }
+
+        $value = trim($value);
 
         if(!($this->is_integer($value))) {
             $this->invalid_type("Se esparaba un tipo entero en {$field} en lugar de {$value}");
@@ -165,8 +169,8 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? null;
 
-        if (is_string($value)) {
-            $value = trim($value);
+        if (!is_string($value)) {
+            $value = '';
         }
 
         if (!($this->is_float($value))) {
@@ -191,10 +195,12 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? "false";
 
-        if (is_string($value)) {
-            $value = trim($value);
-            $value = strtolower($value);
+        if (!is_string($value)) {
+            $value = "false";
         }
+
+        $value = trim($value);
+        $value = strtolower($value);
 
         if (!($this->is_boolean($value))) {
             $this->invalid_type("El valor proporcionado, '{$value}', no cumple con el formato esperado para un booleano en el campo '{$field}'");
