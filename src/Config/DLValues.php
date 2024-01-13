@@ -107,11 +107,11 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? '';
 
-        if (!is_string($value)) {
+        if (!is_numeric($value)) {
             $value = '';
         }
 
-        $value = trim($value);
+        $value = trim((string) $value);
 
         $is_valid = $this->is_numeric($value);
 
@@ -141,11 +141,11 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? null;
 
-        if (!is_string($value)) {
+        if (!is_numeric($value)) {
             $value = '';
         }
 
-        $value = trim($value);
+        $value = trim((string) $value);
 
         if(!($this->is_integer($value))) {
             $this->invalid_type("Se esparaba un tipo entero en {$field} en lugar de {$value}");
@@ -169,9 +169,11 @@ trait DLValues {
          */
         $value = static::$values[$field] ?? null;
 
-        if (!is_string($value)) {
+        if (!is_numeric($value)) {
             $value = '';
         }
+
+        $value = trim((string) $value);
 
         if (!($this->is_float($value))) {
             $this->invalid_type("Se esperaba un número real en {$field} en lugar de {$value}");
