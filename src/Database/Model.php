@@ -88,7 +88,7 @@ abstract class Model {
      *
      * @return void
      */
-    private static function clear_table(): void {
+    protected static function clear_table(): void {
         static::$table_default = null;
     }
 
