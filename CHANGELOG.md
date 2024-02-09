@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.32] - Fecha
+## [v0.1.32] - 09 de febrero de 2024
 
 ### Cambios
 
