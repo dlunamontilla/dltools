@@ -231,4 +231,11 @@ final class TestController extends Controller {
             "products" => $products
         ];
     }
+
+    public function file(): array {
+        $this->set_basedir('/uploads');
+
+        $files = $this->upload_file('file', 'image/*');
+        return $files;
+    }
 }

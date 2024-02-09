@@ -70,6 +70,7 @@ DLRoute::get('/test/{page}/{rows}', [TestController::class, 'test'])->filter_by_
     "rows" => "integer"
 ]);
 
+DLRoute::post('/file', [TestController::class, 'file']);
 
 
 DLRoute::execute();
