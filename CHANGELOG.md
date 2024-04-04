@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.35] - 09 de febrero de 2024
+## [v0.1.36] - 09 de febrero de 2024
 
 ### Cambios
 
@@ -9,8 +9,8 @@
 
 ### Cómo Actualizar
 
-Para integrar esta corrección en tu aplicación, actualiza tu versión de la biblioteca a la `v0.1.35`. Asegúrate de seguir las mejores prácticas de actualización de tu gestor de dependencias favorito.
+Para integrar esta corrección en tu aplicación, actualiza tu versión de la biblioteca a la `v0.1.36`. Asegúrate de seguir las mejores prácticas de actualización de tu gestor de dependencias favorito.
 
 ### Notas Adicionales
 
-- Si estás utilizando versiones anteriores a la `v0.1.35`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
+- Si estás utilizando versiones anteriores a la `v0.1.36`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
