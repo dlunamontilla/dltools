@@ -112,6 +112,8 @@ trait DLConfig {
             $this->exception($error);
         }
 
+        $pdo->exec("SET time_zone = '+00:00'");
+        
         return $pdo;
     }
 
