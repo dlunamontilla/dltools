@@ -505,4 +505,30 @@ abstract class Model {
         static::$order = $type;
     }
 
+    /**
+     * Agrupa los resultados en función de los campos seleccionadas
+     *
+     * @param string ...$field Campos por el que se van a agrupar
+     * @return DLDatabase
+     */
+    public static function group_by(string ...$field): DLDatabase {
+        static::init();
+
+        /**
+         * Tabla actual elegida por el modelo
+         * 
+         * @var string $table
+         */
+        $table = static::$table_default;
+
+        /**
+         * Base de datos
+         * 
+         * @var DLDatabase $db
+         */
+        $db = static::$db->from($table)->group_by(...$field);
+        static::clear_table();
+
+        return $db;
+    }
 }
