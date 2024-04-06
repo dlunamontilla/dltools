@@ -40,15 +40,15 @@ class DatabaseTest extends TestCase {
 
             [
                 "expected" => "SELECT product_name, product_type FROM products",
-                "actual" => $this->database->select("product_name", "product_type")->from('products')->get_query()
+                "actual" => $this->database->from('products')->select("product_name", "product_type")->get_query()
             ],
 
             [
                 "expected" => "SELECT product_name, product_type FROM products",
-                "actual" => $this->database->select([
+                "actual" => $this->database->from('products')->select([
                     "product_name",
                     "product_type"
-                ])->from('products')->get_query()
+                ])->get_query()
             ]
         ];
 
@@ -111,14 +111,14 @@ class DatabaseTest extends TestCase {
 
     public function testLimit(): void {
         $expected = "SELECT name FROM products LIMIT 10";
-        $actual = $this->database->select('name')->from('products')->limit(10)->get_query();
+        $actual = $this->database->from('products')->select('name')->limit(10)->get_query();
 
         $this->assertSame($expected, $actual);
     }
 
     public function testLimitWhere(): void {
         $expected = "SELECT name FROM products WHERE id = :id LIMIT 7";
-        $actual = $this->database->select('name')->from('products')->where('id', 7)->limit(7)->get_query();
+        $actual = $this->database->from('products')->select('name')->where('id', 7)->limit(7)->get_query();
 
         $this->assertSame($expected, $actual);
     }

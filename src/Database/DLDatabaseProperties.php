@@ -86,6 +86,13 @@ trait DLDatabaseProperties {
      */
     protected string $query = "";
 
+    /**
+     * Almacena información en el que deben agruparse las columnas
+     *
+     * @var string|null
+     */
+    protected ?string $group_by = null;
+
     protected string $new_keys = "";
 
     protected array $values = [];

@@ -13,7 +13,9 @@ namespace DLTools\Database;
  * @license MIT
  */
 trait DLQueryBuilder {
-  
+
+    use DLDatabaseProperties;
+
     /**
      * Establece el límite o rango de registros a devolver.
      *
@@ -138,5 +140,42 @@ trait DLQueryBuilder {
         ];
 
         return $data;
+    }
+
+    /**
+     * Agrupa por
+     *
+     * @param string $column_name
+     * @return self
+     */
+    public function group_by(string ...$column_name): DLDatabase {
+
+        /**
+         * Consulta SQL
+         * 
+         * @var string $query
+         */
+        $query = $this->query;
+
+        /**
+         * Cadena de columna por la cual se va a agrupar la consulta
+         * 
+         * @var string $columns
+         */
+        $columns = implode(', ', $column_name);
+        $columns = trim($columns);
+        $this->group_by = " GROUP BY {$columns}";
+
+        return $this;
+    }
+
+    /**
+     * Establece la consulta SQL a ejecutar
+     *
+     * @param string $query Consulta SQL
+     * @return void
+     */
+    protected function set_query(string $query): void {
+        $this->query = $query;
     }
 }

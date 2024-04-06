@@ -5,7 +5,6 @@ namespace DLTools\Database;
 use DLTools\Config\DLConfig;
 use Error;
 use PDO;
-use PDOException;
 
 /**
  * Esta clase se está reescribiendo...
@@ -25,7 +24,6 @@ use PDOException;
 class DLDatabase {
 
     use DLConfig;
-    use DLDatabaseProperties;
     use DLQueryBuilder;
 
     private static ?self $instance = NULL;
@@ -426,6 +424,10 @@ class DLDatabase {
 
         if (!($this->empty($this->where))) {
             array_push($options, " " . $this->where);
+        }
+
+        if (!is_null($this->group_by)) {
+            array_push($options,"". $this->group_by);
         }
 
         if (!($this->empty($this->order_by))) {
