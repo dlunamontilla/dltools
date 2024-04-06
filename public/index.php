@@ -1,4 +1,5 @@
 <?php
+
 use DLTools\Auth\DLAuth;
 use DLTools\Test\TestController;
 
@@ -19,6 +20,7 @@ session_set_cookie_params($sessionExpirte);
 session_start();
 
 include dirname(__DIR__, 1) . "/vendor/autoload.php";
+
 
 /**
  * Devuelve código HTML a partir de una vista.
@@ -59,8 +61,8 @@ DLRoute::get('/', function (object $params) {
 
 $auth = DLAuth::get_instance();
 
-$auth->logged(function() {
-    DLRoute::get('/ciencia', function(object $params) {
+$auth->logged(function () {
+    DLRoute::get('/ciencia', function (object $params) {
         return $params;
     });
 });
@@ -71,6 +73,5 @@ DLRoute::get('/test/{page}/{rows}', [TestController::class, 'test'])->filter_by_
 ]);
 
 DLRoute::post('/file', [TestController::class, 'file']);
-
 
 DLRoute::execute();
