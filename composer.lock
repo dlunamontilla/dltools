@@ -83,16 +83,16 @@
         },
         {
             "name": "dlunamontilla/dlroute",
-            "version": "v1.3.27",
+            "version": "v1.3.28",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dlunamontilla/dlroute.git",
-                "reference": "59dbf2cdbf01a881312a513e206bc24961facf49"
+                "reference": "2876f72dffcf4405553c0883caab6a6e8331c7bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dlunamontilla/dlroute/zipball/59dbf2cdbf01a881312a513e206bc24961facf49",
-                "reference": "59dbf2cdbf01a881312a513e206bc24961facf49",
+                "url": "https://api.github.com/repos/dlunamontilla/dlroute/zipball/2876f72dffcf4405553c0883caab6a6e8331c7bf",
+                "reference": "2876f72dffcf4405553c0883caab6a6e8331c7bf",
                 "shasum": ""
             },
             "type": "library",
@@ -114,9 +114,9 @@
             "description": "Sistema de enrutamiento para usar en DLUnire o cualquier otro proyecto.",
             "support": {
                 "issues": "https://github.com/dlunamontilla/dlroute/issues",
-                "source": "https://github.com/dlunamontilla/dlroute/tree/v1.3.27"
+                "source": "https://github.com/dlunamontilla/dlroute/tree/v1.3.28"
             },
-            "time": "2024-04-19T09:23:27+00:00"
+            "time": "2024-04-19T10:04:46+00:00"
         },
         {
             "name": "enshrined/svg-sanitize",
