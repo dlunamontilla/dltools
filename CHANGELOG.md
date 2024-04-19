@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.41] - 19 de abril de 2024
+## [v0.1.42] - 19 de abril de 2024
 
 ### Cambios
 
@@ -12,4 +12,4 @@ Para integrar esta corrección en tu aplicación, actualiza tu versión de la bi
 
 ### Notas Adicionales
 
-- Si estás utilizando versiones anteriores a la `v0.1.41`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
+- Si estás utilizando versiones anteriores a la `v0.1.42`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
