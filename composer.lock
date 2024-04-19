@@ -83,17 +83,20 @@
         },
         {
             "name": "dlunamontilla/dlroute",
-            "version": "v1.3.28",
+            "version": "v1.3.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dlunamontilla/dlroute.git",
-                "reference": "2876f72dffcf4405553c0883caab6a6e8331c7bf"
+                "reference": "15270d276f20c4a1e6c87b20ce48e53d4be7a684"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dlunamontilla/dlroute/zipball/2876f72dffcf4405553c0883caab6a6e8331c7bf",
-                "reference": "2876f72dffcf4405553c0883caab6a6e8331c7bf",
+                "url": "https://api.github.com/repos/dlunamontilla/dlroute/zipball/15270d276f20c4a1e6c87b20ce48e53d4be7a684",
+                "reference": "15270d276f20c4a1e6c87b20ce48e53d4be7a684",
                 "shasum": ""
+            },
+            "require": {
+                "imagine/imagine": "^1.3"
             },
             "type": "library",
             "autoload": {
@@ -114,9 +117,9 @@
             "description": "Sistema de enrutamiento para usar en DLUnire o cualquier otro proyecto.",
             "support": {
                 "issues": "https://github.com/dlunamontilla/dlroute/issues",
-                "source": "https://github.com/dlunamontilla/dlroute/tree/v1.3.28"
+                "source": "https://github.com/dlunamontilla/dlroute/tree/v1.3.29"
             },
-            "time": "2024-04-19T10:04:46+00:00"
+            "time": "2024-04-19T13:30:59+00:00"
         },
         {
             "name": "enshrined/svg-sanitize",
@@ -224,6 +227,68 @@
                 "source": "https://github.com/ezyang/htmlpurifier/tree/v4.17.0"
             },
             "time": "2023-11-17T15:01:25+00:00"
+        },
+        {
+            "name": "imagine/imagine",
+            "version": "1.3.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-imagine/Imagine.git",
+                "reference": "7151d553edec4dc2bbac60419f7a74ff34700e7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-imagine/Imagine/zipball/7151d553edec4dc2bbac60419f7a74ff34700e7f",
+                "reference": "7151d553edec4dc2bbac60419f7a74ff34700e7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8 || ^5.7 || ^6.5 || ^7.5 || ^8.4 || ^9.3"
+            },
+            "suggest": {
+                "ext-exif": "to read EXIF metadata",
+                "ext-gd": "to use the GD implementation",
+                "ext-gmagick": "to use the Gmagick implementation",
+                "ext-imagick": "to use the Imagick implementation"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-develop": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Imagine\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bulat Shakirzyanov",
+                    "email": "mallluhuct@gmail.com",
+                    "homepage": "http://avalanche123.com"
+                }
+            ],
+            "description": "Image processing for PHP 5.3",
+            "homepage": "http://imagine.readthedocs.org/",
+            "keywords": [
+                "drawing",
+                "graphics",
+                "image manipulation",
+                "image processing"
+            ],
+            "support": {
+                "issues": "https://github.com/php-imagine/Imagine/issues",
+                "source": "https://github.com/php-imagine/Imagine/tree/1.3.5"
+            },
+            "time": "2023-06-07T14:49:52+00:00"
         },
         {
             "name": "league/commonmark",
