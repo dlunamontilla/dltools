@@ -1,15 +1,15 @@
 # Changelog
 
-## [v0.1.50] - 19 de abril de 2024
+## [v0.1.51] - 02 de octubre de 2024
 
 ### Cambios
 
-- Se reciben actualizaciones.
+- Se agregó el método estático `field_is_null` al modelo, y también a `QueryBuilder`, para permitir consultas de campos con valor nulo.
 
 ### Cómo Actualizar
 
-Para integrar esta corrección en tu aplicación, actualiza tu versión de la biblioteca a la `v0.1.50`. Asegúrate de seguir las mejores prácticas de actualización de tu gestor de dependencias favorito.
+Para integrar esta nueva funcionalidad en tu aplicación, actualiza a la versión `v0.1.51` de la biblioteca. Sigue las mejores prácticas de actualización de tu gestor de dependencias.
 
 ### Notas Adicionales
 
-- Si estás utilizando versiones anteriores a la `v0.1.50`, te recomendamos actualizar para aprovechar las últimas correcciones y mejoras.
+- Si estás utilizando versiones anteriores a la `v0.1.51`, se recomienda actualizar para aprovechar las últimas correcciones y mejoras.

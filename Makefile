@@ -1,5 +1,5 @@
 main:
-	php -S 0.0.0.0:3000 -t public/
+	php -S 0.0.0.0:4000 -t public/
 
 push:
 	git add .; git commit -a; git push origin dev; git checkout master; git merge dev; git push origin master; git checkout dev

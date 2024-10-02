@@ -178,4 +178,18 @@ trait DLQueryBuilder {
     protected function set_query(string $query): void {
         $this->query = $query;
     }
+
+    /**
+     * Establece una consulta que permite devolver registro en función de un campo con valor nulo previamente seleccionado.
+     *
+     * @param string $field Campo o columna con valor nulo
+     * @return DLDatabase
+     */
+    public function field_is_null(string $field): DLDatabase {
+        $field = trim($field);
+        $field = trim($field, "\"\'");
+        $this->where = "WHERE {$field} IS NULL";
+
+        return $this;
+    }
 }

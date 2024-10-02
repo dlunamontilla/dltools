@@ -254,11 +254,11 @@ abstract class Model {
             }
 
             $data = static::$db->from(static::$table_default)
-                        ->select(...$fields)
-                        ->order_by(...static::$order_by)
+                ->select(...$fields)
+                ->order_by(...static::$order_by)
                 ->{static::$order}()
-                    ->limit(100)
-                    ->get();
+                ->limit(100)
+                ->get();
         }
 
         if (count($data) < 1) {
@@ -406,7 +406,7 @@ abstract class Model {
 
         $db = static::$db->from(static::$table_default)->order_by(...$column);
         static::clear_table();
-        
+
         return $db;
     }
 
@@ -529,6 +529,33 @@ abstract class Model {
         $db = static::$db->from($table)->group_by(...$field);
         static::clear_table();
 
+        return $db;
+    }
+
+    /**
+     * Establece una consulta que permite devolver registro en función de un campo con valor nulo previamente seleccionado.
+     *
+     * @param string $field Campo o columna con valor nulo
+     * @return DLDatabase
+     */
+    public static function field_is_null(string $field): DLDatabase {
+        static::init();
+
+        /**
+         * Tabla elegida por el modelo
+         * 
+         * @var string $table
+         */
+        $table = static::$table_default;
+
+        /**
+         * Base de datos
+         * 
+         * @var DLDatabase $db
+         */
+        $db = static::$db->from($table)->field_is_null($field);
+
+        static::clear_table();
         return $db;
     }
 }
