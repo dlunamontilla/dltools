@@ -76,7 +76,7 @@ class DLAuth implements AuthInterface {
         return $random_string;
     }
 
-    public function auth(DLUser $user, array | DLAuthOptions $options = [], ?DLCookie $cookie): bool {
+    public function auth(DLUser $user, array | DLAuthOptions $options = [], ?DLCookie $cookie = null): bool {
         /**
          * Variables de entorno.
          * 
@@ -290,6 +290,9 @@ class DLAuth implements AuthInterface {
 
 
             if ($cookie instanceof DLCookie) {
+                $cookie->set_name('__auth__');
+                $cookie->set_value($token);
+
                 $cookie->create_cookie();
             } else {
                 setcookie(

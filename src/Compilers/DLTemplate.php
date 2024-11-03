@@ -254,6 +254,9 @@ class DLTemplate {
         $stringTemplate = self::parseMarkdown($stringTemplate);
 
         $stringTemplate = self::parseFunctions($stringTemplate);
+        $stringTemplate = self::parse_break($stringTemplate);
+        $stringTemplate = self::parse_continue($stringTemplate);
+        $stringTemplate = self::parse_var($stringTemplate);
 
         return $stringTemplate;
     }
@@ -516,5 +519,57 @@ class DLTemplate {
         $replace = "<?= $1; ?>";
 
         return preg_replace($pattern, $replace, $stringTemplate);
+    }
+
+    /**
+     * Parsea la directiva @continue a <?php continue; ?>
+     *
+     * @return string
+     */
+    public static function parse_continue(string $input): string {
+        $pattern = self::get_directive_parse("continue");
+        $replace = "<?php continue; ?>";
+
+        return preg_replace($pattern, $replace, $input);
+    }
+
+    /**
+     * Traduce la directiva `@break` a `<?php break; ?>`
+     *
+     * @return string
+     */
+    public static function parse_break(string $input): string {
+        $pattern = self::get_directive_parse($input);
+        return preg_replace($pattern, '<?php break; ?>', $input);
+    }
+
+    /**
+     * Traduce la directiva `@varname('variable', 'Valor de la variable)` a `$name = "Valor de la variable";
+     * 
+     * > Advertencia: la directiva `@varname` se encuentra en fase experimental.
+     *
+     * @param string $input
+     * @return string
+     */
+    public static function parse_var(string $input): string {
+        $pattern = "/(?<!\S)(\@varname\(([a-z]+), ((.*?))\))(?!\S)";
+        $replace = "<?php \$$2 = $3; ?>";
+
+        return trim(preg_replace($pattern, $replace, $input));
+    }
+
+    /**
+     * Devuelve la expresión regular de la directiva
+     *
+     * @param string $input Nombre de la directiva a ser procesada
+     * @return string
+     */
+    public static function get_directive_parse(string $input): string {
+        return "(?<!\S)\@{$input}(?!\S)";
+    }
+
+    public static function get_directive_function(string $input): string {
+
+        return $input;
     }
 }
