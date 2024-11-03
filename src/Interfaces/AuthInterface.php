@@ -2,6 +2,8 @@
 
 namespace DLTools\Interfaces;
 
+use DLTools\Auth\DLAuthOptions;
+use DLTools\Auth\DLCookie;
 use DLTools\Auth\DLUser;
 
 /**
@@ -31,11 +33,15 @@ interface AuthInterface {
     public function get_hash(): string;
 
     /**
-     * Autentica el usuario, en el caso de los datos sean correctos.
+     * Autentica al usuario en caso de que los datos sean correctos.
      *
-     * @return bool
+     * @param DLUser $user Modelo relacionado a la tabla de usuarios del sistema.
+     * @param array|DLAuthOptions $options Opcional. Opciones de autenticación.
+     * @param DLCookie|null $cookie Opcional. Establece los parámetros de configuración y envío de la cookie.
+     * @return bool Retorna `true` si la autenticación fue exitosa, `false` en caso contrario.
      */
-    public function auth(DLUser $user): bool;
+    public function auth(DLUser $user, array|DLAuthOptions $options = [], ?DLCookie $cookie): bool;
+
 
     /**
      * Permite ejecutar acciones cuadno el usuario está autenticado

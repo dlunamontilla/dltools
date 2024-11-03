@@ -1,4 +1,5 @@
 <?php
+
 namespace DLTools\Auth;
 
 use DLRoute\Requests\DLOutput;
@@ -75,14 +76,7 @@ class DLAuth implements AuthInterface {
         return $random_string;
     }
 
-    /**
-     * Permite autenticar el usuario
-     *
-     * @param DLUser $user Usuario a autenticar
-     * @param array $options Opciones de autenticación
-     * @return boolean
-     */
-    public function auth(DLUser $user, $options = []): bool {
+    public function auth(DLUser $user, array | DLAuthOptions $options = [], ?DLCookie $cookie): bool {
         /**
          * Variables de entorno.
          * 
@@ -93,35 +87,34 @@ class DLAuth implements AuthInterface {
         /**
          * Nombre del campo del nombre de usuario de la tabla de usuarios.
          * 
-         * @var string|null
+         * @var string $username_field
          */
-        $username_field = null;
+        $username_field = 'username';
 
         /**
          * Nombre del campo de la contraseña de la tabla de usuarios.
          * 
-         * @var string|null
+         * @var string $password_field
          */
-        $password_field = null;
+        $password_field = 'password';
 
         /**
          * Nombre del campo de token de la tabla de usuarios. Útil para
          * permitir cerrar sesión en todos los dispositivos al mismo tiempo.
          * 
-         * @var string|null
+         * @var string $token_field
          */
-        $token_field = null;
+        $token_field = 'token';
 
-        if (array_key_exists('username_field', $options)) {
-            $username_field = $options['username_field'];
-        }
 
-        if (array_key_exists('password_field', $options)) {
-            $password_field = $options['password_field'];
-        }
-
-        if (array_key_exists('token_field', $options)) {
-            $token_field = $options['token_field'];
+        if ($options instanceof DLAuthOptions) {
+            $username_field = $options->get_username_field();
+            $password_field = $options->get_password_field();
+            $token_field = $options->get_token_field();
+        } elseif (is_array($options)) {
+            $username_field = $options['username_field'] ?? $username_field;
+            $password_field = $options['password_field'] ?? $password_field;
+            $token_field = $options['token_field'] ?? $token_field;
         }
 
         /**
@@ -171,10 +164,7 @@ class DLAuth implements AuthInterface {
          * 
          * @var array
          */
-        $user_data = $user->where(
-            $username_field,
-            $user->get_username()
-        )->first();
+        $user_data = $user->where($username_field, $user->get_username())->first();
 
         /**
          * Token de autenticación de usuario.
@@ -195,12 +185,9 @@ class DLAuth implements AuthInterface {
                 $user_token
             );
 
-            $user->where(
-                $username_field,
-                $user->get_username()
-            )->update([
-                        $token_field => $user_token
-                    ]);
+            $user->where($username_field, $user->get_username())->update([
+                $token_field => $user_token
+            ]);
         }
 
         /**
@@ -300,15 +287,21 @@ class DLAuth implements AuthInterface {
              */
             $token = bin2hex($bytes);
 
-            setcookie(
-                "__auth__",
-                $token,
-                time() + 60 * 60 * 24 * 30,
-                "/",
-                DLServer::get_hostname(),
-                $credentiales->is_production(),
-                true
-            );
+
+
+            if ($cookie instanceof DLCookie) {
+                $cookie->create_cookie();
+            } else {
+                setcookie(
+                    "__auth__",
+                    $token,
+                    time() + 60 * 60 * 24 * 30,
+                    "/",
+                    DLServer::get_hostname(),
+                    $credentiales->is_production(),
+                    true
+                );
+            }
 
             $_SESSION['__auth__'] = $token;
         }
@@ -466,7 +459,7 @@ class DLAuth implements AuthInterface {
      * @return void
      */
     protected function required_authentication(string $message, int $code = 401): void {
-        
+
         if ($code !== 401 && $code !== 403) {
             throw new Error("Solo se permiten los códigos de estados 401 y 403", 500);
         }
@@ -500,7 +493,7 @@ class DLAuth implements AuthInterface {
         if ($code !== 401 && $code !== 403 && $code !== 301 && $code !== 302) {
             throw new Error("Solo se permiten los valores numéricos 401, 403, 301 y 302", 500);
         }
-        
+
         /**
          * Indica si la ruta y método HTTP existen previamente
          * 
@@ -523,7 +516,7 @@ class DLAuth implements AuthInterface {
          * @var boolean $is_new
          */
         $is_new = !$before_exists && $after_exists;
-        
+
         /**
          * @var string $route
          */
@@ -541,7 +534,7 @@ class DLAuth implements AuthInterface {
          */
         $method_name = strtolower($method);
         $method_name = trim($method_name);
-        
+
         /**
          * Verifica si el método de la clase `DLRoute` existe
          * 
@@ -552,7 +545,7 @@ class DLAuth implements AuthInterface {
         if (!$method_exists) {
             return;
         }
-        
+
 
         if ($is_new && !$allow) {
             if (!is_null($redirect_to)) {
@@ -611,7 +604,7 @@ class DLAuth implements AuthInterface {
          */
         $route = DLServer::get_route();
 
-        
+
         if (!array_key_exists($method, $routes)) {
             return false;
         }
