@@ -552,7 +552,7 @@ class DLTemplate {
      * @return string
      */
     public static function parse_var(string $input): string {
-        $pattern = "/(?<!\S)(\@varname\(([a-z]+), ((.*?))\))(?!\S)";
+        $pattern = "/(?<!\S)(\@varname\(([a-z]+), ((.*?))\))(?!\S)/";
         $replace = "<?php \$$2 = $3; ?>";
 
         return trim(preg_replace($pattern, $replace, $input));
