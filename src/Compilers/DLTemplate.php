@@ -539,7 +539,7 @@ class DLTemplate {
      * @return string
      */
     public static function parse_break(string $input): string {
-        $pattern = self::get_directive_parse($input);
+        $pattern = self::get_directive_parse('break');
         return preg_replace($pattern, '<?php break; ?>', $input);
     }
 
@@ -565,11 +565,6 @@ class DLTemplate {
      * @return string
      */
     public static function get_directive_parse(string $input): string {
-        return "(?<!\S)\@{$input}(?!\S)";
-    }
-
-    public static function get_directive_function(string $input): string {
-
-        return $input;
+        return "/(?<!\S)\@{$input}(?!\S)/";
     }
 }
