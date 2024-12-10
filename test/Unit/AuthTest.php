@@ -6,24 +6,18 @@ use PHPUnit\Framework\TestCase;
 
 
 class AuthTest extends Testcase {
-    /**
-     * Obtjeto de autenticación
-     *
-     * @var DLAuth
-     */
     private DLAuth $auth;
 
-    /**
-     * @before
-     *
-     * @return void
-     */
     public function setup(): void {
         $this->auth = DLAuth::get_instance();
     }
 
-    public function testAuth(): void {
+    public function test_auth(): void {
         $string = $this->auth->get_token();
         $this->assertNotEmpty($string, 'La cadena se encuentra vacía');
+    }
+
+    public function test_true(): void {
+        $this->assertTrue(true);
     }
 }

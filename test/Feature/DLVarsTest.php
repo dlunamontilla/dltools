@@ -10,41 +10,21 @@ class DLVarsTest extends TestCase {
 
     private ?Credentials $credentials = null;
 
-    /**
-     * @before
-     *
-     * @return void
-     */
     public function setup(): void {
         $this->credentials = $this->get_credentials();
     }
 
-    /**
-     * @test
-     *
-     * @return void
-     */
     public function test_production(): void {
         $value = $this->credentials->is_production();
         $this->assertIsBool($value);
     }
 
-    /**
-     * @test
-     *
-     * @return void
-     */
     public function test_database_host(): void {
         $value = $this->credentials->get_host();
         $this->assertIsString($value);
     }
 
-    /**
-     * @test
-     *
-     * @return void
-     */
-    public function test_databse_port(): void {
+    public function test_database_port(): void {
         $value = $this->credentials->get_port();
         $this->assertIsInt($value);
     }

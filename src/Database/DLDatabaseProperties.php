@@ -156,4 +156,9 @@ trait DLDatabaseProperties {
      * @var boolean
      */
     protected bool $customer = false;
+
+    protected function __construct() {
+        $this->pdo = $this->get_pdo();
+        $this->clean();
+    }
 }

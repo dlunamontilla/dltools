@@ -192,4 +192,61 @@ trait DLQueryBuilder {
 
         return $this;
     }
+
+    /**
+     * Agrega una condición "WHERE IN" a la consulta SQL.
+     *
+     * Este método permite especificar una condición "WHERE IN" para filtrar
+     * resultados según un conjunto de valores en un campo específico de la base de datos.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * $queryBuilder->where_in('campo', 'valor1', 'valor2', 'valor3');
+     * ```
+     * Generará una cláusula SQL similar a:
+     * ```sql
+     * WHERE campo IN ('valor1', 'valor2', 'valor3')
+     * ```
+     *
+     * @param string $field El nombre del campo sobre el cual se aplicará la condición.
+     * @param string ...$value Uno o más valores para la cláusula "IN".
+     * @return static Retorna la instancia actual para permitir encadenamiento de métodos.
+     */
+    public function where_in(string $field, string ...$values): static {
+        $string_values = $this->get_string_values($field, ...$values);
+        $this->where = "WHERE {$field} IN ({$string_values})";
+
+        return $this;
+    }
+
+    /**
+     * Convierte una lista de valores en una cadena separada por comas y entrecomillada.
+     *
+     * Este método toma una lista de valores y los formatea como una cadena de texto
+     * en la que cada valor está encerrado entre comillas simples, separados por comas.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * $result = $this->get_string_values('valor1', 'valor2', 'valor3');
+     * // Resultado: "'valor1', 'valor2', 'valor3'"
+     * ```
+     *
+     * @param string ...$values Una lista de valores a formatear.
+     * @return string Una cadena de texto con los valores formateados para su uso en consultas SQL.
+     */
+    private function get_string_values(string $field = 'field', string ...$values): string {
+        /** @var string[] $fragments */
+        $fragments = [];
+
+        /** @var int $index */
+        $index = 0;
+
+        foreach ($values as $value) {
+            ++$index;
+            array_push($fragments, ":{$field}{$index}");
+            $this->param[":{$field}{$index}"] = $value;
+        }
+
+        return implode(", ", $fragments);
+    }
 }

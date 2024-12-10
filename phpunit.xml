@@ -3,15 +3,10 @@
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
     bootstrap="vendor/autoload.php"
     colors="true">
-
     <testsuites>
-        <testsuite name="Unit Tests">
-            <directory>./test/Unit</directory>
-        </testsuite>
-
-        <testsuite name="Feature Tests">
-            <directory>./test/Feature</directory>
+        <testsuite name="unit">
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">test/Unit</directory>
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">test/Feature</directory>
         </testsuite>
     </testsuites>
-
 </phpunit>

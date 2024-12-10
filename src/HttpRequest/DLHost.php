@@ -90,7 +90,7 @@ class DLHost {
      */
     public function https(): void {
         $serverName = (string) strtolower($_SERVER['SERVER_NAME']);
-        $https = self::isHTTPS();
+        $https = \DLRoute\Server\DLHost::is_https();
         $url = (string) $_SERVER['REQUEST_URI'];
 
         if (!count($this->hostName) > 0)

@@ -313,23 +313,78 @@ abstract class Model {
     }
 
     /**
-     * Establece una condicional para las consultas de actualización y/o eliminación de registros.
+     * Establece una condición `WHERE` para las consultas de actualización y/o eliminación de registros.
      *
-     * @param string $field Campo de la tabla
-     * @param string $operator Operador de comparación. El operador puede ser tomado como valor si se pasan dos argumentos.
-     * @param string|null $value Opcional. Valor a ser evaluado,
-     * @param string $logical_operator Operador lógico
-     * @return DLDatabase
+     * Este método permite construir una cláusula `WHERE` con un operador de comparación personalizado, y opcionalmente
+     * puede especificar un operador lógico para combinar múltiples condiciones.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * Model::where('id', '=', '10');
+     * // Genera: WHERE id = :id, donde `:id` contiene 10
+     * 
+     * // También se puede utilizar de esta forma:
+     * Model::where('id', '10'); // Genera: WHERE id = :id
+     *
+     * Model::where('status', 'active', null, 'OR');
+     * // Genera: WHERE status = :status, donde :status contiene 'active'
+     *
+     * Model::where('price', '>', '100', 'AND');
+     * // Genera: WHERE price > :price, donde `price` contiene `'100'`
+     * ```
+     *
+     * @param string $field El campo de la tabla sobre el cual se aplica la condición.
+     * @param string $operator El operador de comparación (por ejemplo, '=', '>', '<'). 
+     *                         Si se pasa un solo argumento junto con `$field`, se toma como valor y el operador será '='.
+     * @param string|null $value (Opcional) El valor a comparar. Si no se proporciona, `$operator` se considera el valor.
+     * @param string $logical_operator El operador lógico para combinar múltiples condiciones (`AND` o `OR`).
+     *                                  Por defecto es `AND`.
+     * @return DLDatabase La instancia configurada de la base de datos con la condición aplicada.
      */
     public static function where(string $field, string $operator, ?string $value = null, string $logical_operator = self::AND): DLDatabase {
         static::init();
+
+        /**
+         * Asegura que el operador lógico esté en mayúsculas para mantener consistencai.
+         * 
+         * @var string $logical_operator
+         */
         $logical_operator = strtoupper($logical_operator);
 
+        /** @var DLDatabase $db */
         $db = static::$db->from(static::$table_default)->where($field, $operator, $value, $logical_operator);
-        static::clear_table();
 
+        static::clear_table();
         return $db;
     }
+
+
+    /**
+     * Establece una condición `WHERE IN` para la consulta SQL.
+     *
+     * Este método agrega una cláusula `WHERE IN` a la consulta en construcción, permitiendo
+     * filtrar los registros donde el valor del campo especificado coincida con alguno de los valores proporcionados.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * Model::where_in('id', '1', '2', '3');
+     * // Genera: WHERE id IN (:id1, :id2, :id3)
+     * ```
+     *
+     * @param string $field El nombre del campo sobre el cual aplicar la condición.
+     * @param string ...$values Una lista de valores a incluir en la cláusula `WHERE IN`.
+     * @return DLDatabase La instancia de la base de datos con la condición aplicada.
+     */
+    public static function where_in(string $field, string ...$values): DLDatabase {
+        static::init();
+
+        /** @var DLDatabase $db */
+        $db = static::$db->from(static::$table_default)->where_in($field, ...$values);
+
+        static::clear_table();
+        return $db;
+    }
+
 
     /**
      * Selecciona los campos de la tabla

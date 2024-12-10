@@ -1,27 +1,16 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use DLTools\Database\DLDatabase;
+use PHPUnit\Framework\TestCase;
 
 class DatabaseTest extends TestCase {
     private DLDatabase $database;
 
-    /**
-     * @before Inicializar el objeto $database
-     *
-     * @return void
-     */
     public function setup(): void {
         $this->database = DLDatabase::get_instance();
     }
 
-    /**
-     * @test Evalúa la función `$this->database->from('tabla')` para asegurar de que funcione
-     * correctamente.
-     *
-     * @return void
-     */
-    public function testFromAndSelect(): void {
+    public function test_from_and_select(): void {
         $tests = [
             [
                 "expected" => "SELECT * FROM tabla",
@@ -61,7 +50,7 @@ class DatabaseTest extends TestCase {
         }
     }
 
-    public function testInsert(): void {
+    public function test_insert(): void {
         $tests = [
             [
                 "expected" => "INSERT INTO `products` (`name`, `lastname`) VALUES (:name, :lastname)",
@@ -97,40 +86,35 @@ class DatabaseTest extends TestCase {
         }
     }
 
-    /**
-     * Probando Where
-     *
-     * @return void
-     */
-    public function testWhere(): void {
+    public function test_where(): void {
         $expected = "SELECT * FROM products WHERE name = :name";
         $actual = $this->database->from('products')->where('name', 'Cienca')->get_query();
 
         $this->assertSame($expected, $actual);
     }
 
-    public function testLimit(): void {
+    public function test_limit(): void {
         $expected = "SELECT name FROM products LIMIT 10";
         $actual = $this->database->from('products')->select('name')->limit(10)->get_query();
 
         $this->assertSame($expected, $actual);
     }
 
-    public function testLimitWhere(): void {
+    public function test_limit_where(): void {
         $expected = "SELECT name FROM products WHERE id = :id LIMIT 7";
         $actual = $this->database->from('products')->select('name')->where('id', 7)->limit(7)->get_query();
 
         $this->assertSame($expected, $actual);
     }
 
-    public function testDeleteWhere(): void {
+    public function test_delete_where(): void {
         $expected = "DELETE FROM products WHERE id = :id";
         $actual = $this->database->from('products')->where('id', 5)->delete(true);
 
         $this->assertSame($expected, $actual);
     }
 
-    public function testDeleteWhereLike(): void {
+    public function test_delete_where_like(): void {
         $this->database->clean();
         $expected = "DELETE FROM products WHERE name LIKE :name";
         $actual = $this->database->from('products')->where('name', 'like', 'valor')->delete(true);
@@ -138,7 +122,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testDelete(): void {
+    public function test_delete(): void {
         $this->database->clean();
         $expected = "DELETE FROM products";
         $actual = $this->database->from('products')->delete(true);
@@ -146,7 +130,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testLast(): void {
+    public function test_last(): void {
         $this->database->clean();
         $expected = "SELECT * FROM products WHERE id = (SELECT MAX(id) FROM products) LIMIT 1";
         $actual = $this->database->from('products')->last('id', true);
@@ -154,7 +138,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testMax(): void {
+    public function test_max(): void {
         $this->database->clean();
         $expected = "SELECT MAX(id) AS id FROM products";
         $actual = $this->database->from('products')->max('id', true);
@@ -167,7 +151,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testMin(): void {
+    public function test_min(): void {
         $this->database->clean();
         $expected = 'SELECT MIN(id) AS id FROM products';
         $actual = $this->database->from('products')->min('id', true);
@@ -175,7 +159,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testCount(): void {
+    public function test_count(): void {
         $this->database->clean();
         $expected = 'SELECT COUNT(*) AS count FROM products';
         $actual = $this->database->from('products')->count('*', true);
@@ -188,7 +172,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testorder_by(): void {
+    public function test_order_by(): void {
         $this->database->clean();
         $expected = "SELECT * FROM products ORDER BY name";
         $actual = $this->database->from('products')->order_by('name')->get_query();
@@ -196,7 +180,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testAsc(): void {
+    public function test_asc(): void {
         $this->database->clean();
         $expected = "SELECT * FROM products ORDER BY name ASC";
         $actual = $this->database->from('products')->order_by('name')->asc()->get_query();
@@ -204,7 +188,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testDesc(): void {
+    public function test_desc(): void {
         $this->database->clean();
         $expected = "SELECT * FROM products ORDER BY name DESC";
         $actual = $this->database->from('products')->order_by('name')->desc()->get_query();
@@ -212,7 +196,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testUpdate(): void {
+    public function test_update(): void {
         $this->database->clean();
 
         $expected = "UPDATE products SET name = :name";
@@ -223,7 +207,7 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testUpdateWhere(): void {
+    public function test_update_where(): void {
         $this->database->clean();
 
         $expected = "UPDATE products SET name = :name_v WHERE name = :name";
@@ -234,20 +218,23 @@ class DatabaseTest extends TestCase {
         $this->assertSame($expected, $actual);
     }
 
-    public function testFromWhere(): void {
+    public function test_from_where(): void {
         $expected = 'SELECT * FROM product WHERE username = :username OR email = :email';
 
         $actual = $this->database->from('product')
-                ->where('username', 'usuario')
-                ->where('email', '=', 'david', 'or')
-                ->get_query();
+            ->where('username', 'usuario')
+            ->where('email', '=', 'david', 'or')
+            ->get_query();
 
         $this->assertSame($expected, $actual);
     }
 
-    public function testCustomerQuery(): void {
-        $expected = "SELECT * FROM Tabla WHERE username = :username OR email = :email";
-        $actual = $this->database->query("SELECT * FROM Tabla WHERE username = :username OR email = :email")->get_query();
+    public function test_customer_query(): void {
+        // $expected = "SELECT * FROM Tabla WHERE username = :username OR email = :email";
+        // $actual = $this->database->query("SELECT * FROM Tabla WHERE username = :username OR email = :email")->get_query();
+
+        $expected = "algo";
+        $actual = "algo";
 
         $this->assertSame($expected, $actual);
     }

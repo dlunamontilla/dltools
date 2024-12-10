@@ -28,11 +28,6 @@ class DLDatabase {
 
     private static ?self $instance = NULL;
 
-    private function __construct() {
-        $this->pdo = $this->get_pdo();
-        $this->clean();
-    }
-
     /**
      * Limpia los datos almacenados en la clase DLDatabase.
      *
@@ -427,7 +422,7 @@ class DLDatabase {
         }
 
         if (!is_null($this->group_by)) {
-            array_push($options,"". $this->group_by);
+            array_push($options, "" . $this->group_by);
         }
 
         if (!($this->empty($this->order_by))) {
@@ -597,7 +592,7 @@ class DLDatabase {
 
         $this->table = trim($this->table);
         $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table}";
-        
+
         if (!empty($where)) {
             $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table} {$where}";
         }
