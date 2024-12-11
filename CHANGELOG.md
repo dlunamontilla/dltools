@@ -11,16 +11,26 @@ El formato es el siguiente:
 - `Fixed` para corrección de errores.
 - `Security` para correcciones de vulnerabilidades.
 
-## [v0.1.57] - 2024-12-10
+## [v0.1.58] - 2024-12-11
 
 ### Added
 
-- Se agregó el método `where_in` en la clase `Model` como método estático.
-- Se agregó el método `where_in` en la clase `DLDatabase` como un método normal.
+- Ninguna funcionalidad nueva introducida en esta versión.
 
 ### Changed
 
-- Ningún cambio significativo en funcionalidades existentes en esta versión.
+- **DLRoute**:
+
+  - **DLUpload Trait**:
+    - Los siguientes métodos cambiaron su visibilidad de `protected` a `public` para permitir un acceso más flexible:
+      - `upload_file(string $field, string $type = "*/*"): array`: Maneja la carga de archivos en el servidor.
+      - `get_filenames(): array`: Devuelve los nombres de los archivos cargados.
+      - `set_basedir(string $basedir): void`: Establece el directorio base para los archivos cargados.
+      - `set_thumbnail_width(int $width): void`: Configura la anchura de los thumbnails.
+      - `get_absolute_path(string $relative_path): string`: Devuelve la ruta absoluta de un archivo dado su ruta relativa.
+
+- **DLTools**:
+  - Se realizó un `composer update` para mantener las dependencias actualizadas. No se detectaron cambios funcionales significativos tras la actualización.
 
 ### Deprecated
 
@@ -29,3 +39,11 @@ El formato es el siguiente:
 ### Removed
 
 - Ninguna funcionalidad eliminada en esta versión.
+
+### Fixed
+
+- Ningún error corregido en esta versión.
+
+### Security
+
+- Ninguna corrección de vulnerabilidades en esta versión.
