@@ -15,7 +15,7 @@ use Error;
  * 
  * @package DLTools\Database
  * 
- * @version 1.0.0
+ * @version v0.1.63
  * @author David E Luna M <davidlunamontilla@gmail.com>
  * @copyright 2023 David E Luna M
  * @license MIT
@@ -360,26 +360,38 @@ abstract class Model {
 
 
     /**
-     * Establece una condición `WHERE IN` para la consulta SQL.
+     * Agrega una condición "WHERE IN" a la consulta SQL.
      *
-     * Este método agrega una cláusula `WHERE IN` a la consulta en construcción, permitiendo
-     * filtrar los registros donde el valor del campo especificado coincida con alguno de los valores proporcionados.
+     * Este método permite especificar una condición "WHERE IN" para filtrar
+     * resultados según un conjunto de valores en un campo específico de la base de datos.
      *
      * Ejemplo de uso:
-     * ```php
-     * Model::where_in('id', '1', '2', '3');
-     * // Genera: WHERE id IN (:id1, :id2, :id3)
+     * ```
+     * <?php
+     * $queryBuilder->where_in('campo', ['valor1', 'valor2', 'valor3']);
      * ```
      *
-     * @param string $field El nombre del campo sobre el cual aplicar la condición.
-     * @param string ...$values Una lista de valores a incluir en la cláusula `WHERE IN`.
-     * @return DLDatabase La instancia de la base de datos con la condición aplicada.
+     * Generará una cláusula SQL similar a:
+     * ```
+     * <?php
+     * WHERE campo IN (':in_campo1', ':in_campo2', ':in_campo3')
+     * ```
+     * 
+     * Donde `:in_campo1`, `:in_campo2` y `:in_campo3` es el marcador de posición de cada valor
+     *
+     * @param string   $field   El nombre del campo sobre el cual se aplicará la condición.
+     * @param string[] $values  Lista de valores para la cláusula "IN".
+     * @param string   $logical Operador lógico para combinar condiciones (por defecto, DLDatabase::AND).
+     * @return DLDatabase          Retorna la instancia actual para permitir encadenamiento de métodos.
+     *
+     * @since 2.0.0 Se actualizó la firma del método para aceptar un array de valores en lugar de parámetros individuales
+     *                y se agregó un tercer parámetro para definir el operador lógico.
      */
-    public static function where_in(string $field, string ...$values): DLDatabase {
+    public static function where_in(string $field, array $values, string $logical = self::AND): DLDatabase {
         static::init();
 
         /** @var DLDatabase $db */
-        $db = static::$db->from(static::$table_default)->where_in($field, ...$values);
+        $db = static::$db->from(static::$table_default)->where_in($field, $values, $logical);
 
         static::clear_table();
         return $db;

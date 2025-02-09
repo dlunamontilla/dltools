@@ -11,6 +11,36 @@ El formato es el siguiente:
 - `Fixed` para corrección de errores.
 - `Security` para correcciones de vulnerabilidades.
 
+## [v0.1.63] - 2024-12-14
+
+### Changed
+
+- **DLDatabase / Query Builder**:
+  - Se actualizó el método `where_in()` para aceptar un array de valores en lugar de utilizar el spread operator, permitiendo además el uso de un tercer parámetro opcional `$logical` (por defecto `DLDatabase::AND`) para definir el operador lógico al combinar condiciones.
+  
+### Removed
+
+- **DLDatabase / Query Builder**:
+  - Se removió la versión anterior del método `where_in()` que utilizaba la firma `where_in(string $field, string ...$values)`.
+
+### Added
+
+- Ninguna funcionalidad nueva introducida en esta versión.
+
+### Deprecated
+
+- Ninguna funcionalidad marcada como obsoleta en esta versión.
+
+### Fixed
+
+- Ningún error corregido en esta versión.
+
+### Security
+
+- Ninguna corrección de vulnerabilidades en esta versión.
+
+---
+
 ## [v0.1.62] - 2024-12-13
 
 ### Changed
@@ -39,6 +69,8 @@ El formato es el siguiente:
 
 - Ninguna corrección de vulnerabilidades en esta versión.
 
+---
+
 ## [v0.1.59] - 2024-12-12
 
 ### Changed
@@ -65,6 +97,8 @@ El formato es el siguiente:
 ### Security
 
 - Ninguna corrección de vulnerabilidades en esta versión.
+
+---
 
 ## [v0.1.58] - 2024-12-11
 
