@@ -1,7 +1,7 @@
 {
     // "editor.fontLigatures": "'ss01', 'ss02', 'ss03', 'ss04', 'ss05', 'ss06', 'zero', 'onum'",
     // "editor.fontLigatures": "'ss01'",
-    "editor.fontFamily": "Fira Code Retina",
+    // "editor.fontFamily": "Fira Code Retina",
     "editor.fontLigatures": true,
     "docwriter.style": "JSDoc",
     // "oneDarkPro.vivid": true

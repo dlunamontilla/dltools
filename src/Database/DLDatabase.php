@@ -26,6 +26,20 @@ class DLDatabase {
     use DLConfig;
     use DLQueryBuilder;
 
+    /**
+     * Operador lógico
+     * 
+     * @var string AND
+     */
+    public const AND = "AND";
+
+    /**
+     * Operador lógico
+     * 
+     * @var string OR
+     */
+    public const OR = "OR";
+
     private static ?self $instance = NULL;
 
     /**
@@ -445,27 +459,141 @@ class DLDatabase {
      * @param string $localOperator
      * @return self
      */
-    public function where(string $field, string $operator, ?string $value = NULL, string $logicalOperator = 'AND'): self {
-        $this->param[":" . $field] = $value !== NULL ? trim($value) : trim($operator);
-        $logicalOperator = strtoupper($logicalOperator);
+    public function where(string $field, string $operator, ?string $value = NULL, string $logical = self::AND): self {
+        /** @var string[] $conditions */
+        static $conditions = [];
 
-        if ($value === NULL && empty($this->where)) {
-            $this->where = "WHERE $field = :{$field}";
-        } else if ($value === NULL && !empty($this->where)) {
-            $this->where .= " {$logicalOperator} $field = :{$field}";
-        }
+        $logical = $this->get_logical_operator($logical);
 
-        if ($value !== NULL) {
-            $operator = strtoupper($operator);
+        $this->set_conditions($conditions, $field, $operator, $value, $logical);
 
-            if (empty($this->where)) {
-                $this->where = "WHERE $field {$operator} :{$field}";
-            } else {
-                $this->where .= " {$logicalOperator} $field {$operator} :{$field}";
-            }
-        }
+        /** @var bool $is_empty */
+        $is_empty = empty(trim($this->where));
+
+        $this->where = "WHERE " . implode(" ", $conditions);
 
         return $this;
+    }
+
+    /**
+     * Construye la consulta condicional `where` estableciendo la condición.
+     *
+     * @param array $conditions Condicionales almacenadas.
+     * @param string $field Campo o columna de la tabla de referencia para ser consultada.
+     * @param string $operator Operador de comparación.
+     * @param string|null $value Valor de la consulta.
+     * @param string $logical Operador lógico.
+     * @return void
+     */
+    private function set_conditions(array &$conditions, string $field, string $operator, ?string $value = NULL, string $logical = 'AND') {
+        $operator = strtoupper(trim($operator));
+
+        /** @var string | null $key */
+        $key = $this->get_param_key($field, $operator, $value);
+
+        /** @var string $condition */
+        $condition = "";
+
+        if (is_null($value) && !is_null($key)) {
+            $operator = "=";
+        }
+
+        $condition = $key
+            ? "{$field} {$operator} {$key}"
+            : "{$field} {$operator}";
+
+        if (count($conditions) > 0) {
+            $condition = "{$logical} {$condition}";
+        }
+
+        $conditions[] = $condition;
+    }
+
+    /**
+     * Devuelve el operador lógico
+     *
+     * @param string $logical Operador lógico a ser procesado
+     * @return string
+     */
+    private function get_logical_operator(string $logical): string {
+        $logical = strtoupper(trim($logical));
+
+        /** @var string[] $allowed */
+        $allowed = ["AND", "OR"];
+
+        return in_array($logical, $allowed) ? $logical : 'AND';
+    }
+
+    /**
+     * Establece y devuelve el parámetro con el valor asociado a una clave de tipo :key.
+     *
+     * @param string $field Campo o columna de la tabla.
+     * @param string $operator Operator o valor según sea el caso.
+     * @param string|null $value Valor de la consulta.
+     * @return string|null
+     */
+    private function get_param_key(string $field, string $operator, ?string $value): ?string {
+
+        if ($this->is_null_operator($operator)) {
+            return null;
+        }
+
+        static $counters = [];
+
+        if (!isset($counters[$field])) {
+            $counters[$field] = 0;
+        }
+
+        ++$counters[$field];
+
+        /** @var string $key */
+        $key = ":{$field}" . $counters[$field];
+
+        $this->set_param_key($key, $operator, $value);
+        return $key;
+    }
+
+
+    /**
+     * Establece la clave del parámetro de la consulta parametrizada.
+     *
+     * @param string $key Clave del parámetro
+     * @param string $operator Operador
+     * @param string|null $value Valor que se utilizar para ser consultado
+     * @return void
+     */
+    private function set_param_key(string $key, string $operator, ?string $value): void {
+        $this->param[$key] = !is_null($value)
+            ? trim($value)
+            : trim($operator);
+    }
+
+    /**
+     * Devuelve el operador normalizado.
+     *
+     * @param string $operator Operador a ser procesado.
+     * @return string Operador en su forma estándar.
+     */
+    private function get_operator(string $operator): string {
+        $operator = strtoupper(trim($operator));
+
+        return match ($operator) {
+            "IS NULL", "IS NOT NULL" => $operator,
+            default => $operator
+        };
+    }
+
+    /**
+     * Valida si se trata de un operador de nulidad
+     *
+     * @param string $operator Operador a verificar
+     * @return boolean
+     */
+    private function is_null_operator(string $operator): bool {
+        /** @var string[] $null_operators */
+        $null_operators = ["IS NULL", "IS NOT NULL"];
+
+        return in_array($operator, $null_operators, true);
     }
 
     /**
