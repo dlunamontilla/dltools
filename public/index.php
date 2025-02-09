@@ -80,12 +80,16 @@ DLRoute::post('/file', [TestController::class, 'file']);
 final class Employee extends Model {
 }
 
+final class RoleEmployee extends Model {
+}
+
 DLRoute::get('/sql', function () {
 
-    $query = Employee::where('employee_date', 'is null')->paginate(1, 3);
-
+    $query = Employee::where('employee_date', 'is null')->where('employee_record_status', '1')->first();
+    $query2 = RoleEmployee::where('role_employee_uuid', 'e712f207-bcb8-4fc2-a3a6-0b532bd8633e')->first();
     return [
-        "query" => $query
+        "query" => $query,
+        "query2" => $query2
     ];
 });
 

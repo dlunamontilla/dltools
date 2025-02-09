@@ -157,6 +157,13 @@ trait DLDatabaseProperties {
      */
     protected bool $customer = false;
 
+    /**
+     * Condiciones de la consulta
+     *
+     * @var array<int, string> $conditions
+     */
+    public array $conditions = [];
+
     protected function __construct() {
         $this->pdo = $this->get_pdo();
         $this->clean();

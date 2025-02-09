@@ -11,6 +11,34 @@ El formato es el siguiente:
 - `Fixed` para corrección de errores.
 - `Security` para correcciones de vulnerabilidades.
 
+## [v0.1.60] - 2024-12-13
+
+### Changed
+
+- **DLDatabase / Query Builder**:
+  - Se corrigió la estructura condicional de la consulta, limpiando las consultas condicionales para evitar incoherencias.
+  - Se mantiene el soporte para `IS NULL` e `IS NOT NULL` y la corrección de conflictos entre consultas relacionados con la precedencia de operadores lógicos.
+
+### Added
+
+- Ninguna funcionalidad nueva introducida en esta versión.
+
+### Deprecated
+
+- Ninguna funcionalidad marcada como obsoleta en esta versión.
+
+### Removed
+
+- Ninguna funcionalidad eliminada en esta versión.
+
+### Fixed
+
+- Ningún error corregido en esta versión.
+
+### Security
+
+- Ninguna corrección de vulnerabilidades en esta versión.
+
 ## [v0.1.59] - 2024-12-12
 
 ### Changed

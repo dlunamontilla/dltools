@@ -65,6 +65,7 @@ class DLDatabase {
         $this->order_by = "";
         $this->limit = -1;
         $this->customer = false;
+        $this->conditions = [];
     }
 
     /**
@@ -460,17 +461,15 @@ class DLDatabase {
      * @return self
      */
     public function where(string $field, string $operator, ?string $value = NULL, string $logical = self::AND): self {
-        /** @var string[] $conditions */
-        static $conditions = [];
 
         $logical = $this->get_logical_operator($logical);
 
-        $this->set_conditions($conditions, $field, $operator, $value, $logical);
+        $this->set_conditions($this->conditions, $field, $operator, $value, $logical);
 
         /** @var bool $is_empty */
         $is_empty = empty(trim($this->where));
 
-        $this->where = "WHERE " . implode(" ", $conditions);
+        $this->where = "WHERE " . implode(" ", $this->conditions);
 
         return $this;
     }
