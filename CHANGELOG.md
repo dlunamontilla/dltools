@@ -11,7 +11,7 @@ El formato es el siguiente:
 - `Fixed` para corrección de errores.
 - `Security` para correcciones de vulnerabilidades.
 
-## [v0.1.61] - 2024-12-13
+## [v0.1.62] - 2024-12-13
 
 ### Changed
 
