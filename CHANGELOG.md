@@ -1,3 +1,13 @@
+## [v0.1.65] - 2025-02-17
+
+### Changed
+
+- **Model**:
+  - Se actualizó el método `having()` en el modelo para que utilice la nueva implementación en `DLDatabase` y refleje correctamente el uso de la cláusula `HAVING` en las consultas SQL.
+  - Se modificó la documentación del método `having()` en el modelo, reemplazando las referencias anteriores a `where` por `having`, acorde con la nueva funcionalidad.
+
+---
+
 ## [v0.1.64] - 2025-02-16
 
 ### Added
@@ -25,6 +35,8 @@
 ### Security
 
 - Ninguna corrección de vulnerabilidades en esta versión.
+
+---
 
 ## [v0.1.63] - 2025-02-09
 
@@ -151,3 +163,5 @@
 ### Security
 
 - Ninguna corrección de vulnerabilidades en esta versión.
+
+---

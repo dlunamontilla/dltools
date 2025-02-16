@@ -358,6 +358,54 @@ abstract class Model {
         return $db;
     }
 
+    /**
+     * Establece una condición `HAVING` para las consultas con agrupación en la base de datos.
+     *
+     * Este método permite construir una cláusula `HAVING` con un operador de comparación personalizado, y opcionalmente
+     * puede especificar un operador lógico para combinar múltiples condiciones. La cláusula `HAVING` se utiliza para
+     * filtrar los resultados después de una operación de agrupación (GROUP BY).
+     *
+     * Ejemplo de uso:
+     * ```php
+     * Model::having('id', '=', '10');
+     * // Genera: HAVING id = :id, donde `:id` contiene 10
+     * 
+     * // También se puede utilizar de esta forma:
+     * Model::having('id', '10'); // Genera: HAVING id = :id
+     *
+     * Model::having('status', 'active', null, 'OR');
+     * // Genera: HAVING status = :status, donde :status contiene 'active'
+     *
+     * Model::having('price', '>', '100', 'AND');
+     * // Genera: HAVING price > :price, donde `price` contiene '100'
+     * ```
+     *
+     * @param string $field El campo de la tabla sobre el cual se aplica la condición.
+     * @param string $operator El operador de comparación (por ejemplo, '=', '>', '<'). 
+     *                         Si se pasa un solo argumento junto con `$field`, se toma como valor y el operador será '='.
+     * @param string|null $value (Opcional) El valor a comparar. Si no se proporciona, `$operator` se considera el valor.
+     * @param string $logical_operator El operador lógico para combinar múltiples condiciones (`AND` o `OR`).
+     *                                  Por defecto es `AND`.
+     * @return DLDatabase La instancia configurada de la base de datos con la condición aplicada.
+     */
+    public static function having(string $field, string $operator, ?string $value = null, string $logical_operator = self::AND): DLDatabase {
+        static::init();
+
+        /**
+         * Asegura que el operador lógico esté en mayúsculas para mantener consistencia.
+         * 
+         * @var string $logical_operator
+         */
+        $logical_operator = strtoupper($logical_operator);
+
+        /** @var DLDatabase $db */
+        $db = static::$db->from(static::$table_default)->having($field, $operator, $value, $logical_operator);
+
+        static::clear_table();
+        return $db;
+    }
+
+
 
     /**
      * Agrega una condición "WHERE IN" a la consulta SQL.
