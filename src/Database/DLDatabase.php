@@ -212,9 +212,7 @@ class DLDatabase {
             $this->get_query();
         }
 
-        if ($this->custom) {
-            $this->param = $param;
-        }
+        $this->param = [...$this->param, ...$param];
 
         if ($this->empty($this->query)) {
             $this->select();
@@ -242,9 +240,7 @@ class DLDatabase {
             $this->get_query();
         }
 
-        if ($this->custom) {
-            $this->param = $param;
-        }
+        $this->param = [...$this->param, ...$param];
 
         if ($this->empty($this->query)) {
             $this->select();
@@ -505,7 +501,6 @@ class DLDatabase {
     public function query(string $query): self {
         $this->clean();
         $this->customer = true;
-
         $this->custom = true;
         $this->query = trim($query);
 

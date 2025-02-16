@@ -55,9 +55,10 @@ trait DLQueryBuilder {
      *
      * @param integer $page
      * @param integer $rows
+     * @param array<string,mixed> $param Parámetros de la consulta
      * @return array
      */
-    public function paginate(int $page, int $rows): array {
+    public function paginate(int $page, int $rows, array $param = []): array {
 
         if ($page < 1) {
             static::error("\$page debe ser mayor que cero (0)");
@@ -72,7 +73,9 @@ trait DLQueryBuilder {
          * 
          * @var array|integer $quantity
          */
+        $quantity = 0;
         $quantity = $this->count();
+
         $quantity = $quantity['count'] ?? 0;
 
         /**
@@ -116,7 +119,7 @@ trait DLQueryBuilder {
         }
 
         if (count($register) < 1) {
-            $register = $this->limit($start, $rows)->get();
+            $register = $this->limit($start, $rows)->get($param);
         }
 
         if ($quantity <= 0) {
@@ -361,11 +364,33 @@ trait DLQueryBuilder {
      * @param string|null $value Valor que se utilizar para ser consultado
      * @return void
      */
-    protected function set_param_key(string $key, string $operator, ?string $value): void {
+    protected function set_param_key(string $key, string $operator, ?string $value = null): void {
         $this->param[$key] = !is_null($value)
             ? trim($value)
             : trim($operator);
     }
+
+    /**
+     * Asigna un valor a un parámetro de la consulta parametrizada.
+     *
+     * Este método agrega un par clave-valor al array de parámetros utilizado en consultas parametrizadas.
+     * La clave se formatea automáticamente anteponiendo dos puntos (':') para cumplir con la sintaxis SQL de parámetros.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * $db->set_params('id', '10');
+     * // Esto asigna el valor '10' al parámetro :id en la consulta.
+     * ```
+     *
+     * @param string $key Nombre del parámetro sin el prefijo ':'.
+     * @param string $value Valor asignado al parámetro.
+     * @return DLDatabase Retorna la instancia actual de DLDatabase para permitir el encadenamiento de métodos.
+     */
+    public function set_params(string $key, string $value): DLDatabase {
+        $this->set_param_key(":{$key}", $value);
+        return $this;
+    }
+
 
     /**
      * Devuelve el operador normalizado.

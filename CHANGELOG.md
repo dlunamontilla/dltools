@@ -1,3 +1,7 @@
+## [v0.1.66]
+  - Se agrega el método set_params.
+  - Se mejoran características
+
 ## [v0.1.65] - 2025-02-17
 
 ### Changed

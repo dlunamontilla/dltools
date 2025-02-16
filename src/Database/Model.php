@@ -405,6 +405,32 @@ abstract class Model {
         return $db;
     }
 
+    /**
+     * Asigna un valor a un parámetro de la consulta parametrizada de forma estática.
+     *
+     * Este método inicializa la instancia de DLDatabase si aún no ha sido configurada, asigna el valor del parámetro
+     * utilizando el método interno `set_params` y luego limpia la configuración de la tabla mediante `clear_table()`.
+     * De esta manera, se garantiza que la consulta se construya correctamente y se permita el encadenamiento de métodos.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * DLDatabase::set_params('id', '10');
+     * // Esto asigna el valor '10' al parámetro :id en la consulta parametrizada.
+     * ```
+     *
+     * @param string $key El nombre del parámetro sin el prefijo ':'.
+     * @param string $value El valor que se asignará al parámetro.
+     * @return DLDatabase Retorna la instancia configurada de DLDatabase para permitir el encadenamiento de métodos.
+     */
+    public static function set_params(string $key, string $value): DLDatabase {
+        static::init();
+
+        /** @var DLDatabase $db */
+        $db = static::$db->set_params($key, $value);
+
+        static::clear_table();
+        return $db;
+    }
 
 
     /**
