@@ -465,12 +465,35 @@ class DLDatabase {
 
         $this->set_conditions($this->conditions, $field, $operator, $value, $logical);
 
-        /** @var bool $is_empty */
-        $is_empty = empty(trim($this->where));
-
         $this->where = "WHERE " . implode(" ", $this->conditions);
         return $this;
     }
+
+    /**
+     * Agrega una condición a la cláusula HAVING de la consulta SQL.
+     * 
+     * Este método permite agregar condiciones de filtro en las consultas SQL que se aplican después de un GROUP BY. 
+     * Se utiliza para agregar restricciones a los resultados de una consulta agrupada (por ejemplo, resultados de agregaciones).
+     * Este método asume que la consulta SQL ya ha realizado una operación de agrupación con GROUP BY, o que se realizará en otro punto de la consulta.
+     *
+     * @param string $field El nombre del campo sobre el cual se va a aplicar la condición.
+     * @param string $operator El operador de comparación que se usará para la condición (por ejemplo, '=', '>', '<', etc.).
+     * @param ?string $value El valor con el cual se va a comparar el campo. Puede ser nulo si no se especifica un valor, lo que puede ser útil para comparaciones como "IS NULL".
+     * @param string $logical El operador lógico que se usará entre condiciones (por defecto es "AND"). 
+     *                         Se puede usar "OR" para establecer una condición alternativa.
+     * 
+     * @return self Retorna la instancia actual del objeto, permitiendo encadenar llamadas al método.
+     */
+
+    public function having(string $field, string $operator, ?string $value = NULL, string $logical = self::AND): self {
+        $logical = $this->get_logical_operator($logical);
+
+        $this->set_conditions($this->conditions, $field, $operator, $value, $logical);
+
+        $this->where = "HAVING " . implode(" ", $this->conditions);
+        return $this;
+    }
+
 
     /**
      * Permite crear una sentencia SQL personalizada para

@@ -1,15 +1,30 @@
-# Changelog
+## [v0.1.64] - 2025-02-16
 
-Todas las modificaciones importantes de este proyecto se documentarán en este archivo.
+### Added
 
-El formato es el siguiente:
+- **DLDatabase / Query Builder**:
+  - Se agregó el método `having()` para permitir agregar condiciones a la cláusula HAVING en las consultas SQL, facilitando la concatenación de condicionales en queries que involucran agrupaciones (GROUP BY).
 
-- `Added` para nuevas funcionalidades.
-- `Changed` para cambios en funcionalidades existentes.
-- `Deprecated` para funcionalidades que pronto serán eliminadas.
-- `Removed` para funcionalidades eliminadas de esta versión.
-- `Fixed` para corrección de errores.
-- `Security` para correcciones de vulnerabilidades.
+### Changed
+
+- **DLDatabase / Query Builder**:
+  - Se actualizó la documentación del método `having()` para reflejar su propósito actual y señalar que, por el momento, utiliza la propiedad `$this->where` para concatenar las condiciones.
+
+### Deprecated
+
+- Ninguna funcionalidad marcada como obsoleta en esta versión.
+
+### Removed
+
+- Ninguna funcionalidad eliminada en esta versión.
+
+### Fixed
+
+- Ningún error corregido en esta versión.
+
+### Security
+
+- Ninguna corrección de vulnerabilidades en esta versión.
 
 ## [v0.1.63] - 2025-02-09
 

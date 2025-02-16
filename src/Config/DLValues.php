@@ -22,7 +22,7 @@ trait DLValues {
      * @return string
      */
     public function get_input(string $name): mixed {
-        
+
         if (!array_key_exists($name, static::$values)) {
             return null;
         }
@@ -147,7 +147,7 @@ trait DLValues {
 
         $value = trim((string) $value);
 
-        if(!($this->is_integer($value))) {
+        if (!($this->is_integer($value))) {
             $this->invalid_type("Se esparaba un tipo entero en {$field} en lugar de {$value}");
         }
 
@@ -244,7 +244,7 @@ trait DLValues {
      * @return array
      */
     public function get_array(string $key): array {
-        
+
         /**
          * Entrada del usuario
          * 
@@ -333,7 +333,7 @@ trait DLValues {
          * @var string|null $value
          */
         $value = static::$values[$field] ?? null;
-        
+
         if (!is_string($value)) {
             $this->invalid_type("Entrada inválida en {$field}");
         }

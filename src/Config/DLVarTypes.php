@@ -17,7 +17,14 @@ use DLRoute\Config\Controller;
 trait DLVarTypes {
 
     protected static array $types = [
-        "string", "numeric", "integer", "uuid", "email", "float", "boolean", "null"
+        "string",
+        "numeric",
+        "integer",
+        "uuid",
+        "email",
+        "float",
+        "boolean",
+        "null"
     ];
 
 
@@ -149,7 +156,7 @@ trait DLVarTypes {
          * 
          * @var string
          */
-        $email_pattern = '/^[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_]+\.[a-z][a-z0-9-.]{1,10}$/i';
+        $email_pattern = '/^[a-z0-9]+[a-z][a-z0-9-_.]{1,63}\@[a-z][a-z0-9-_]+\.[a-z][a-z0-9-.]{1,10}$/i';
 
         /**
          * Resultado de un análisis previo hecho para validar un correo electrónico.
@@ -200,7 +207,7 @@ trait DLVarTypes {
          * @var string
          */
         $pattern = "/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/";
-        
+
         return preg_match($pattern, $input);
     }
 }
