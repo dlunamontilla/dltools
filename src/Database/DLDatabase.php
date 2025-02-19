@@ -4,6 +4,7 @@ namespace DLTools\Database;
 
 use DLTools\Config\DLConfig;
 use Error;
+use Exception;
 use PDO;
 
 /**
@@ -43,51 +44,74 @@ class DLDatabase {
     private static ?self $instance = NULL;
 
     /**
-     * Limpia los datos almacenados en la clase DLDatabase.
+     * Establece los campos a seleccionar en una consulta SQL.
      *
-     * @return void
-     */
-    public function clean(): void {
-        $this->select = "";
-        $this->update = "";
-        $this->delete = "";
-        $this->insert = "";
-
-        $this->fields = "*";
-        $this->where = "";
-        $this->query = "";
-        $this->custom = false;
-        $this->param = [];
-        $this->options = "";
-        $this->queryLast = "";
-        $this->column = "";
-        $this->orderDirection = "ASC";
-        $this->order_by = "";
-        $this->limit = -1;
-        $this->customer = false;
-        $this->conditions = [];
-    }
-
-    /**
-     * Selecciona los campos del formulario
+     * Configura los campos que se incluirán en la cláusula `SELECT` de una consulta SQL.
+     * Si no se proporcionan campos específicos, se mantiene el valor por defecto "*".
+     * 
+     * También se encarga de limpiar los espacios en blanco y eliminar duplicados.
      *
-     * @param array|string $fields Campos de una tabla SQL
-     * @param string ...$otherFields Otros campos de una tabla SQL
-     * @return self
+     * @param string ...$fields Lista de nombres de columnas a seleccionar en la consulta SQL.
+     * @return self Instancia actual del objeto para permitir encadenamiento de métodos.
      */
-    public function select(array|string $fields = "*", string ...$otherFields): self {
-        $this->select = "SELECT";
+    public function select(string ...$fields): self {
 
-        $this->fields = is_array($fields)
-            ? join(', ', $fields)
-            : $fields;
+        if (empty($fields)) {
+            return $this;
+        }
 
-        if (!($this->empty($otherFields))) {
-            $this->fields .= ", " . join(", ", $otherFields);
+        if ($this->fields == "*") {
+            $this->fields = implode(", ", $fields);
+        }
+
+        if (!$this->empty($this->fields) && $this->fields != "*") {
+            $this->fields .= ", " . implode(", ", $fields);
+        }
+
+        $this->fields = trim($this->fields);
+        $this->fields = preg_replace("/\s+/", ' ', $this->fields);
+
+        if ($this->empty($this->fields)) {
+            $this->fields = "*";
+        }
+
+        if ($this->fields != "*") {
+            $this->fields = $this->get_unique_field($this->fields);
         }
 
         return $this;
     }
+
+
+    /**
+     * Genera una lista única de nombres de columnas a partir de una cadena de entrada.
+     *
+     * Esta función toma una cadena de nombres de columnas separadas por comas,
+     * elimina espacios en blanco innecesarios y devuelve una lista única de nombres de columnas.
+     *
+     * @param string $fields Lista de nombres de columnas separados por comas.
+     * @return string Lista única de nombres de columnas, separados por comas.
+     */
+    private function get_unique_field(string $fields): string {
+
+        /** @var array<string,string> $columns Array asociativo para almacenar nombres únicos de columnas. */
+        $columns = [];
+
+        /** @var string[] $parts Lista de nombres de columnas después de dividir la cadena de entrada. */
+        $parts = explode(",", $fields);
+
+        foreach ($parts as $part) {
+            if (!is_string($part)) continue;
+
+            $part = trim($part);
+            if (empty($part)) continue;
+
+            $columns[$part] = $part;
+        }
+
+        return implode(", ", $columns);
+    }
+
 
     /**
      * Actualiza los registros de una tabla
@@ -96,6 +120,8 @@ class DLDatabase {
      * @return string|bool
      */
     public function update(array $fields, bool $test = false): string | bool {
+        $this->set_operation(self::UPDATE);
+
         /**
          * Indicador de si se ha completado el proceso de actualización.
          * 
@@ -113,26 +139,26 @@ class DLDatabase {
 
         $this->set_options();
 
-        $newFields = [];
+        $new_fields = [];
         $params = [];
 
         foreach ($fields as $field => $value) {
-            $key = ":" . $field;
+            $key = ":{$field}";
 
 
             if (array_key_exists($key, $this->param)) {
-                array_push($newFields, "{$field} = {$key}_v");
-                $this->param[$key . "_v"] = $value;
+                array_push($new_fields, "{$field} = {$key}_v");
+                $this->param["{$key}_v"] = $value;
 
                 continue;
             }
 
-            array_push($newFields, "{$field} = {$key}");
+            array_push($new_fields, "{$field} = {$key}");
             $this->param[$key] = $value;
         }
 
         $params = $this->param;
-        $query = "UPDATE {$this->table} SET " . join(", ", $newFields);
+        $query = "UPDATE {$this->table} SET " . join(", ", $new_fields);
 
         if (!($this->empty($this->options))) {
             $query .= $this->options;
@@ -158,14 +184,14 @@ class DLDatabase {
      * @return string|bool
      */
     public function delete(bool $test = false): string | bool {
+        $this->set_operation(self::DELETE);
+
         /**
          * Indica si el proceso se ha completado.
          * 
          * @var boolean
          */
         $completed = false;
-
-        $this->delete = "DELETE";
 
         $query = $this->get_query();
         $param = $this->param;
@@ -182,15 +208,19 @@ class DLDatabase {
         return $completed;
     }
 
+    /**
+     * Establece la tabla de la consulta SQL.
+     *
+     * Este método define la tabla sobre la cual se ejecutará la consulta,
+     * eliminando espacios en blanco adicionales en el nombre de la tabla.
+     *
+     * @param string $table Nombre de la tabla a utilizar en la consulta.
+     * @return self Instancia actual del objeto para permitir encadenamiento de métodos.
+     */
     public function from(string $table): self {
-        $this->clean();
-        $this->table = trim($table);
-
-        $empty = empty($this->select) && empty($this->update) && empty($this->delete) && empty($this->insert);
-
-        if ($empty) {
-            $this->select();
-        }
+        $this->table = preg_replace("/\s+/i", ' ', $table);
+        $this->table = trim($this->table);
+        $this->table = "{$this->table}";
 
         return $this;
     }
@@ -201,6 +231,7 @@ class DLDatabase {
      * @return array
      */
     public function get(array $param = []): array {
+
         /**
          * Datos de la consulta
          * 
@@ -208,17 +239,16 @@ class DLDatabase {
          */
         $data = [];
 
-        if (!$this->custom) {
-            $this->get_query();
-        }
+        /** @var string $query */
+        $query = $this->get_query();
 
         $this->param = [...$this->param, ...$param];
 
-        if ($this->empty($this->query)) {
-            $this->select();
+        if ($this->empty($query)) {
+            throw new Error("La consulta no puede estar vacía", 500);
         }
 
-        $stmt = $this->pdo->prepare($this->query);
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute($this->param);
 
         $this->clean();
@@ -228,39 +258,51 @@ class DLDatabase {
     }
 
     /**
-     * Devuelve el primero registro de la tabla
+     * Obtiene el primer registro de la consulta SQL.
      *
-     * @param array $param Parámetros de la consulta.
-     * @return array
+     * Este método ejecuta la consulta SQL actual y devuelve el primer registro encontrado.
+     * Si la consulta no está definida, intenta establecer una consulta `SELECT`.
+     * En caso de que la consulta siga vacía, lanza un error.
+     * 
+     * @param array $param Parámetros adicionales para la consulta preparada.
+     * @return array Primer registro obtenido de la base de datos o un array vacío si no hay resultados.
+     * @throws Error Si la consulta SQL está vacía antes de ejecutarse.
      */
     public function first(array $param = []): array {
         $data = [];
 
+        // Genera la consulta si no es personalizada.
         if (!$this->custom) {
             $this->get_query();
         }
 
+        // Agrega parámetros adicionales a la consulta.
         $this->param = [...$this->param, ...$param];
 
+        // Si la consulta está vacía, intenta establecer una consulta SELECT.
         if ($this->empty($this->query)) {
             $this->select();
         }
 
+        // Si la consulta sigue vacía, lanza un error.
         if ($this->empty($this->query)) {
             throw new Error("La consulta SQL no puede estar vacía");
         }
 
+        // Prepara y ejecuta la consulta.
         $stmt = $this->pdo->prepare($this->query);
         $stmt->execute($this->param);
 
+        // Obtiene el primer registro como un array asociativo.
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Limpia el estado del objeto para futuras consultas.
         $this->clean();
 
-        return $data !== FALSE
-            ? $data
-            : [];
+        // Retorna el primer registro o un array vacío si no hay resultados.
+        return $data !== false ? $data : [];
     }
+
 
     /**
      * Devuelve una consulta SQL construída a partir del constructor
@@ -269,9 +311,27 @@ class DLDatabase {
      * @return string
      */
     public function get_query(): string {
-        if ($this->customer) {
-            return trim($this->query);
+
+        if ($this->customized) {
+            $this->set_options();
+
+            $options = $this->options;
+            $query = $this->query;
+            $params = $this->param;
+
+            $this->clean();
+
+            $this->options = $options;
+            $this->query = "{$query}{$this->options}";
+            $this->param = $params;
+
+            return $this->query;
         }
+
+        $this->load_operation();
+
+        /** @var string|null $operation */
+        $operation = $this->get_operation();
 
         /**
          * @var string $query Sentencia SQL.
@@ -289,17 +349,17 @@ class DLDatabase {
             $this->fields = "*";
         }
 
-        if (!($this->empty($this->select))) {
-            $query = $this->select . " " . $this->fields . " FROM " . $this->table . $this->options;
+        if ($this->is_select()) {
+            $query = "{$operation} {$this->fields} FROM {$this->table} {$this->options}";
         }
 
-        if (!($this->empty($this->update))) {
-            echo PHP_EOL . $this->update;
+        if ($this->is_update()) {
+            // echo PHP_EOL . $this->update;
             $query = $this->update . " {$this->table}";
         }
 
-        if (!($this->empty($this->delete))) {
-            $query = $this->delete . " FROM " . $this->table . $this->options;
+        if ($this->is_delete()) {
+            $query = "{$operation} FROM {$this->table}{$this->options}";
         }
 
         if (!($this->empty($this->queryLast)) && !($this->empty($this->column))) {
@@ -334,15 +394,55 @@ class DLDatabase {
     }
 
     /**
-     * Inserta registros a una tabla SQL
+     * Inserta registros en una tabla SQL.
      *
-     * @param array $fields Campos del formulario
-     * @param bool $test Se define si se ejecutará en modo de prueba o en modo real
-     * @return string | bool
+     * Este método permite insertar datos en una tabla de la base de datos. 
+     * Puede manejar tanto una única inserción como inserciones múltiples en un solo proceso.
+     * También admite un modo de prueba (`test`), en el cual solo devuelve la consulta generada sin ejecutarla.
+     *
+     * @param array $fields Arreglo asociativo con los nombres de los campos y sus respectivos valores.
+     *                      Para múltiples inserciones, se debe proporcionar un arreglo de arreglos.
+     * @param bool $test Indica si se ejecutará en modo de prueba (`true`) o en modo real (`false`).
+     *                   Si es `true`, devuelve la consulta SQL generada en formato de cadena.
+     *
+     * @throws Error Si no se ha definido una tabla antes de ejecutar la inserción.
+     *
+     * @return string|bool Retorna `true` si la inserción se ejecuta con éxito, `false` si falla.
+     *                     En modo de prueba, retorna la consulta SQL en formato de cadena.
      */
-    public function insert(array $fields, bool $test = false): string | bool {
+    public function insert(array $fields, bool $test = false): string|bool {
+        $this->set_operation(self::INSERT);
+        return $this->create($fields, $test);
+    }
+
+    /**
+     * Inserta o reemplaza registros en una tabla SQL.
+     * 
+     * Utiliza la operación REPLACE, que inserta un nuevo registro o reemplaza 
+     * uno existente si la clave primaria o índice único coincide.
+     *
+     * @param array $fields Datos a insertar o reemplazar.
+     * @param bool $test Determina si se ejecuta en modo de prueba (true) o real (false).
+     * @return string|bool Retorna la consulta SQL en modo prueba o `true`/`false` en ejecución real.
+     */
+    public function replace(array $fields, bool $test = false): string|bool {
+        $this->set_operation(self::REPLACE);
+        return $this->create($fields, $test, self::REPLACE);
+    }
+
+
+    /**
+     * Crea un nuevo registro en la tabla especificada.
+     *
+     * @param array $fields Campos y valores a insertar en la tabla.
+     * @param bool $test Determina si la consulta se ejecuta en modo de prueba o realmente en la base de datos.
+     * @param string $operation Tipo de operación SQL a realizar, por defecto es INSERT.
+     * @return string|bool Devuelve la consulta SQL en modo de prueba o true/false dependiendo del éxito de la ejecución.
+     *
+     * @throws Error Si no se ha seleccionado una tabla válida.
+     */
+    private function create(array $fields, bool $test = false, string $operation = SELF::INSERT): string|bool {
         $table = $this->table;
-        $this->insert = "INSERT";
 
         if ($this->empty($table)) {
             throw new Error("Seleccione una tabla");
@@ -353,7 +453,6 @@ class DLDatabase {
         $values = [];
 
         foreach ($fields as $key => $value) {
-
             if (is_string($key)) {
                 array_push($keys, "`$key`");
                 array_push($new_keys, ":$key");
@@ -368,7 +467,6 @@ class DLDatabase {
                         array_push($keys, "`$newKey`");
                         array_push($new_keys, ":$newKey");
                     }
-
                     $register[":" . $newKey] = $newValue;
                 }
 
@@ -378,9 +476,9 @@ class DLDatabase {
 
         $this->fields = join(", ", $keys);
         $this->values = $values;
-
         $this->new_keys = join(", ", $new_keys);
-        $query = "{$this->insert} INTO `{$this->table}` ({$this->fields}) VALUES ({$this->new_keys})";
+
+        $query = "{$operation} INTO `{$this->table}` ({$this->fields}) VALUES ({$this->new_keys})";
 
         if (!$test) {
             $stmt = $this->pdo->prepare($query);
@@ -407,6 +505,8 @@ class DLDatabase {
 
         return false;
     }
+
+
 
     /**
      * Es exactamente lo mismo que `$this->from(string $tabla)`, pero un poco más
@@ -500,7 +600,7 @@ class DLDatabase {
      */
     public function query(string $query): self {
         $this->clean();
-        $this->customer = true;
+        $this->customized = true;
         $this->custom = true;
         $this->query = trim($query);
 

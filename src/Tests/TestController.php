@@ -6,6 +6,8 @@ use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
 use DLRoute\Server\DLServer;
 use DLTools\Compilers\DLView;
+use DLTools\Database\DLDatabase;
+use DLTools\Database\Model;
 use DLTools\HttpRequest\SendMail;
 use DLTools\Tests\Category;
 use DLTools\Tests\Contacts;
@@ -121,7 +123,7 @@ final class TestController extends Controller {
         ]);
 
         $products = Products::get();
-        
+
         new Roles;
 
         return [
@@ -204,10 +206,10 @@ final class TestController extends Controller {
         $users = new Users;
 
         $saved = $users->capture_credentials();
-        
+
         if (!$saved) {
             http_response_code(401);
-            
+
             return [
                 "status" => false,
                 "error" => "No se ha loggeado"
@@ -237,5 +239,49 @@ final class TestController extends Controller {
 
         $files = $this->upload_file('file', 'image/*');
         return $files;
+    }
+
+    /**
+     * Consulta de prueba
+     *
+     * @param object{page: int, rows: int} $params
+     * @return array
+     */
+    public function sql(object $params): array {
+        /** @var DLDatabase $db */
+        $db = DLDatabase::get_instance();
+
+        // $empleados = Employee::get('employee_name name', 'employee_lastname');
+        // // return [$empleados];
+
+        // $employee = Employee::paginate($params->page, $params->rows);
+
+        // $query = $db
+        //     ->query("SELECT * FROM dl_employee WHERE employee_uuid = :uuid")
+        //     ->paginate($params->page, $params->rows, [
+        //         ":uuid" => "f4480e1b-0db3-4aee-abb5-438ea9d78d88",
+        //         // ":uuid" => 5
+        //     ]);
+
+        // $new_data = Model::query("SELECT * FROM dl_users WHERE users_uuid = :uuid")
+        //     ->set_params("uuid", '3c4b9cd7-b675-4d1a-8f80-239fc5567f67')
+        //     ->get([
+        //         ":uuid" => '3c4b9cd7-b675-4d1a-8f80-239fc5567f67',
+        //     ]);
+
+        return [
+            // "employee" => $employee,
+            // "empleados" => $empleados,
+            // "new_data" => $new_data,
+            // "db" => $db,
+            // "query" => $query,
+            "register" => Employee::query('SELECT * FROM dl_users')
+                ->where('username', 'like', 'david')
+                // ->set_params('uuid', '3c4b9cd7-b675-4d1a-8f80-239fc5567f67')
+                ->get(),
+            // "get" => Employee::get(),
+            "test" => Employee::where('employee_uuid', 'f4480e1b-0db3-4aee-abb5-438ea9d78d88')->get(),
+
+        ];
     }
 }

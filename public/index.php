@@ -13,6 +13,7 @@ ini_set('display_errors', 1);
 
 use DLRoute\Requests\DLRoute;
 use DLTools\Compilers\DLView;
+use DLTools\Database\Model;
 
 $sessionExpirte = time() + 1300;
 
@@ -71,4 +72,10 @@ DLRoute::get('/test/{page}/{rows}', [TestController::class, 'test'])->filter_by_
     "page" => "integer",
     "rows" => "integer"
 ]);
+
+DLRoute::get('/sql/{page}/{rows}', [TestController::class, 'sql'])->filter_by_type([
+    "page" => "integer",
+    "rows" => "integer"
+]);
+
 DLRoute::execute();

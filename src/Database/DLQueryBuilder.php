@@ -2,6 +2,8 @@
 
 namespace DLTools\Database;
 
+use Exception;
+
 /**
  * Ayuda a validar las entradas del usuario.
  * 
@@ -61,12 +63,15 @@ trait DLQueryBuilder {
     public function paginate(int $page, int $rows, array $param = []): array {
 
         if ($page < 1) {
-            static::error("\$page debe ser mayor que cero (0)");
+            $page = 1;
         }
 
         if ($rows < 1) {
-            static::error("\$rows debe ser mayor que cero (0)");
+            $rows = 10;
         }
+
+
+        $this->load_table();
 
         /**
          * Identifica la cantidad de registros existentes.
@@ -75,7 +80,6 @@ trait DLQueryBuilder {
          */
         $quantity = 0;
         $quantity = $this->count();
-
         $quantity = $quantity['count'] ?? 0;
 
         /**
@@ -109,8 +113,8 @@ trait DLQueryBuilder {
             "pages" => 1,
             "page" => 1,
             "pagination" => "1 de 1",
-            "rows" => 0,
-
+            "rows" => 1,
+            "total" => $quantity,
             "register" => []
         ];
 
@@ -119,12 +123,15 @@ trait DLQueryBuilder {
         }
 
         if (count($register) < 1) {
+            // print_r($this->get_query());
+            var_dump($this->query);
             $register = $this->limit($start, $rows)->get($param);
+            // exit;
         }
 
         if ($quantity <= 0) {
             $pages = 1;
-            $rows = 0;
+            $rows = 1;
             $page = 1;
         }
 
@@ -138,7 +145,7 @@ trait DLQueryBuilder {
             "page" => $page,
             "pagination" => "{$page} de {$pages}",
             "rows" => $rows,
-
+            "total" => $quantity,
             "register" => $register
         ];
 
@@ -183,10 +190,13 @@ trait DLQueryBuilder {
     }
 
     /**
-     * Establece una consulta que permite devolver registro en función de un campo con valor nulo previamente seleccionado.
+     * Establece una consulta que permite devolver registros en función de un campo con valor nulo previamente seleccionado.
      *
-     * @param string $field Campo o columna con valor nulo
-     * @return DLDatabase
+     * Este método permite establecer una condición en la consulta SQL para filtrar los registros donde el valor de un campo específico sea `NULL`.
+     * El campo se pasa como parámetro, y la consulta resultante incluirá la cláusula `WHERE {campo} IS NULL`.
+     * 
+     * @param string $field El nombre del campo o columna que se evaluará para verificar si su valor es `NULL`.
+     * @return DLDatabase Retorna la instancia de la clase `DLDatabase` para permitir encadenar más métodos sobre la consulta.
      */
     public function field_is_null(string $field): DLDatabase {
         $field = trim($field);
@@ -195,6 +205,7 @@ trait DLQueryBuilder {
 
         return $this;
     }
+
 
     /**
      * Agrega una condición "WHERE IN" a la consulta SQL.
@@ -415,8 +426,216 @@ trait DLQueryBuilder {
      */
     protected function is_null_operator(string $operator): bool {
         /** @var string[] $null_operators */
-        $null_operators = ["IS NULL", "IS NOT NULL"];
+        $null_operators = ["IS NULL", "IS NOT NULL", "IS TRUE", "IS FALSE"];
 
         return in_array($operator, $null_operators, true);
+    }
+
+    /**
+     * Carga el nombre de la tabla a partir de una consulta SQL.
+     *
+     * Este método analiza la consulta almacenada en la propiedad `$this->query` para extraer el alias
+     * de la tabla. Inicialmente, intenta capturar el alias utilizando una subconsulta encerrada en 
+     * paréntesis con la cláusula `as`. Si no se encuentra dicha coincidencia, se intenta extraer el 
+     * nombre de la tabla utilizando la cláusula `FROM`.
+     *
+     * Si la propiedad `$this->table` ya contiene un valor o si la consulta está vacía, el método termina sin acción.
+     *
+     * @return void
+     */
+    protected function load_table(): void {
+
+        if (!empty(trim($this->table))) {
+            return;
+        }
+
+        $this->table = $this->extract_table($this->query);
+    }
+
+    /**
+     * Extrae el nombre de la primera tabla encontrada en una consulta SQL.
+     *
+     * Este método analiza una consulta SQL en busca de nombres de tabla utilizando
+     * expresiones regulares. Primero busca tablas definidas en subconsultas con alias
+     * (formato `(...) AS nombre`), y si no encuentra ninguna, busca en cláusulas `FROM`.
+     *
+     * @param string|null $query La consulta SQL de la cual extraer el nombre de la tabla.
+     * @return string|null El nombre de la primera tabla encontrada o null si no se encuentra ninguna.
+     */
+    public function extract_table(?string $query = null): ?string {
+
+        if (!$query || empty(trim($query))) {
+            return null;
+        }
+
+        /** 
+         * Patrón de expresión regular para extraer el alias de la tabla de una subconsulta.
+         * Este patrón busca una subconsulta encerrada en paréntesis seguida de la palabra clave `AS`
+         * y captura el alias compuesto por caracteres alfanuméricos o guiones bajos.
+         *
+         * @var string $pattern
+         */
+        $pattern = "/\((?:[^()]*|\([^()]*\))*\)\s+as\s+(\w+)/i";
+
+        $found = boolval(
+            preg_match($pattern, $query, $matches)
+        );
+
+        if (!$found) {
+            /** 
+             * Patrón de expresión regular para extraer el nombre de la tabla en una cláusula `FROM`.
+             * Captura el nombre de la primera tabla encontrada después de la palabra `FROM`.
+             */
+            $pattern = "/FROM\s+([\w]+)/i";
+
+            $found = boolval(
+                preg_match($pattern, $query, $matches)
+            );
+        }
+
+        if (!$found) {
+            return null;
+        }
+
+        /**
+         * Tabla capturada en una consulta SQL
+         * 
+         * @var string $table;
+         */
+        $table = trim($matches[1] ?? '');
+
+        return empty($table) ? null : $table;
+    }
+
+    /**
+     * Restablece el estado interno de la clase DLDatabase.
+     *
+     * Reinicializa todas las propiedades de la clase a sus valores por defecto,
+     * asegurando que las consultas previas no afecten futuras operaciones.
+     * Se utiliza después de ejecutar una consulta para evitar efectos colaterales.
+     *
+     * @return void
+     */
+    protected function clean(): void {
+        // Reinicia los comandos SQL
+        $this->select = "";
+        $this->update = "";
+        $this->delete = "";
+        $this->insert = "";
+
+        // Restablece las propiedades de la consulta
+        $this->fields = "*";
+        $this->where = "";
+        $this->query = "";
+        $this->custom = false;
+        $this->param = [];
+        $this->options = "";
+        $this->queryLast = "";
+        $this->column = "";
+        $this->orderDirection = "ASC";
+        $this->order_by = "";
+        $this->limit = -1;
+        $this->customized = false;
+        $this->conditions = [];
+        $this->operation = null;
+    }
+
+    /**
+     * Carga la operación SQL actual o establece un valor por defecto.
+     *
+     * Si la operación SQL aún no ha sido definida, se asigna `self::SELECT` como valor predeterminado.
+     * Este método no retorna ningún valor, solo asegura que la propiedad `$operation` tenga un valor válido.
+     */
+    protected function load_operation(): void {
+        /** @var string|null $operation */
+        $operation = $this->operation;
+
+        if (is_null($operation)) {
+            $this->operation = self::SELECT;
+        }
+    }
+
+    /**
+     * Establece la operación SQL para la consulta actual.
+     *
+     * Este método define la operación SQL que se ejecutará (SELECT, INSERT, UPDATE, DELETE, etc.).
+     * Una vez que la operación ha sido establecida, no puede modificarse nuevamente en la misma instancia,
+     * y cualquier intento de hacerlo generará una excepción.
+     *
+     * @param string $operation La operación SQL a establecer. Por defecto, se asigna `self::SELECT`.
+     * 
+     * @throws Exception Si la operación ya ha sido definida previamente.
+     * 
+     * @return void
+     */
+    protected function set_operation(string $operation = self::SELECT): void {
+
+        if (!is_null($this->operation)) {
+            throw new Exception("No se puede modificar la operación una vez establecida.", 500);
+        }
+
+        $this->operation = $operation;
+    }
+
+
+    /**
+     * Obtiene la operación SQL actual.
+     *
+     * Retorna la operación SQL establecida por el usuario (SELECT, UPDATE, DELETE, etc.).
+     * Si no se ha definido ninguna operación, asigna y devuelve `self::SELECT` como valor por defecto.
+     *
+     * @return string La operación SQL actual o `self::SELECT` si no se ha especificado ninguna.
+     */
+    protected function get_operation(): string {
+        return $this->operation ??= self::SELECT;
+    }
+
+
+    /**
+     * Verifica si la operación actual es una consulta SELECT.
+     *
+     * @return bool Retorna `true` si la operación es `SELECT`, de lo contrario, `false`.
+     */
+    protected function is_select(): bool {
+        return $this->operation == self::SELECT;
+    }
+
+    /**
+     * Verifica si la operación actual es una actualización (UPDATE).
+     *
+     * @return bool Retorna `true` si la operación es `UPDATE`, de lo contrario, `false`.
+     */
+    protected function is_update(): bool {
+        return $this->operation == self::UPDATE;
+    }
+
+    /**
+     * Verifica si la operación actual es una eliminación (DELETE).
+     *
+     * @return bool Retorna `true` si la operación es `DELETE`, de lo contrario, `false`.
+     */
+    protected function is_delete(): bool {
+        return $this->operation == self::DELETE;
+    }
+
+    /**
+     * Verifica si la operación actual es una inserción (INSERT).
+     *
+     * @return bool Retorna `true` si la operación es `INSERT`, de lo contrario, `false`.
+     */
+    protected function is_insert(): bool {
+        return $this->operation == self::INSERT;
+    }
+
+    /**
+     * Condiciones de la consulta
+     *
+     * @var array<int, string> $conditions
+     */
+    public array $conditions = [];
+
+    protected function __construct() {
+        $this->pdo = $this->get_pdo();
+        $this->clean();
     }
 }

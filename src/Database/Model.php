@@ -232,42 +232,40 @@ abstract class Model {
     }
 
     /**
-     * Devuelve los registros de una consulta.
+     * Ejecuta una consulta y devuelve los registros obtenidos.
      *
-     * @param string $fields Opcional. Columnas de la tabla seleccionada.
-     * @return array
+     * Este método inicializa la conexión a la base de datos, ejecuta la consulta sobre 
+     * la tabla predeterminada y retorna los registros obtenidos. Una vez ejecutada la consulta, 
+     * se limpia la referencia a la tabla para evitar reutilizaciones accidentales en futuras consultas.
+     *
+     * @param array $params Opcional. Parámetros opcionales para la consulta parametrizada.
+     *                      Se utilizan para evitar inyecciones SQL y mejorar la seguridad.
+     *
+     * @return array Retorna un array con los registros obtenidos de la consulta.
      */
     public static function get(string ...$fields): array {
         static::init();
 
         /**
-         * Datos de la consulta.
+         * Datos obtenidos de la consulta.
          * 
-         * @var array
+         * @var array $data Contiene los registros resultantes de la consulta.
          */
         $data = [];
 
 
-        if (!is_null(static::$order_by) && count(static::$order_by) > 0) {
-            if (static::$order !== "desc" && static::$order !== "asc") {
-                throw new Error("Solo se permiten `desc` o `asc`");
-            }
-
-            $data = static::$db->from(static::$table_default)
-                ->select(...$fields)
-                ->order_by(...static::$order_by)
-                ->{static::$order}()
-                ->limit(100)
-                ->get();
-        }
-
-        if (count($data) < 1) {
-            $data = static::$db->from(static::$table_default)->select(...$fields)->limit(100)->get();
-        }
+        // $data = static::$db->from(static::$table_default)->select(...$fields)->get();
+        $data = static::$db->select(...$fields)
+            ->from(static::$table_default)
+            ->get();
+        // static::$db->select("ciencia");
+        print_r(static::$db->fields);
+        // exit;
 
         static::clear_table();
         return $data;
     }
+
 
     /**
      * Inserta registro en la base de datos.
@@ -504,28 +502,45 @@ abstract class Model {
     }
 
     /**
-     * Devuelve la cantidad de registros de una tabla
+     * Devuelve la cantidad de registros de una tabla.
      *
-     * @return integer
+     * Este método ejecuta una consulta `COUNT` sobre la tabla predeterminada, 
+     * opcionalmente contando los registros de una columna específica. 
+     * Si no se especifica una columna, contará todos los registros de la tabla.
+     * Además, tiene un parámetro adicional `$test` que puede ser utilizado para 
+     * realizar pruebas o consultas simuladas, sin afectar la base de datos.
+     * Luego, limpia la referencia a la tabla para evitar reutilizaciones accidentales.
+     *
+     * @param string $column Columna sobre la cual contar los registros. Por defecto es "*" para contar todos los registros.
+     * @param bool $test Si se establece como `true`, realiza una simulación de la consulta sin ejecutarla realmente.
+     *
+     * @return int Retorna la cantidad de registros contados. Si no se encuentra ningún registro, retorna 0.
      */
-    public static function count(): int {
+    public static function count(string $column = "*", bool $test = false): int {
         static::init();
 
         /**
-         * Registros de una tabla.
+         * Resultado de la consulta COUNT.
          * 
-         * @var array
+         * @var array $data Contiene el resultado de la consulta COUNT.
          */
-        $data = static::$db->from(static::$table_default)->count();
+        $data = static::$db->from(static::$table_default)->count($column, $test);
 
         static::clear_table();
         return $data['count'] ?? 0;
     }
 
+
     /**
      * Almacena los datos en una tabla.
      *
-     * @return boolean
+     * Este método verifica si hay campos definidos en el objeto y, si es así,
+     * procede a insertar los datos en la tabla asociada utilizando la función 
+     * `insert`. Si no hay campos definidos, devuelve `false` para indicar que 
+     * no se pueden guardar datos.
+     *
+     * @return bool Retorna `true` si los datos se almacenan correctamente en la base de datos, 
+     *              o `false` si no hay campos para guardar.
      */
     public function save(): bool {
 
@@ -535,6 +550,7 @@ abstract class Model {
 
         return static::insert($this->fields);
     }
+
 
     /**
      * Ordena por columnas
@@ -552,25 +568,39 @@ abstract class Model {
     }
 
     /**
-     * Estable el un sistema de paginación en el modelo
+     * Establece un sistema de paginación en el modelo.
      *
-     * @param integer $page Número de página
-     * @param integer $rows Número de registros por páginas
-     * @return array
+     * Este método permite establecer un sistema de paginación para las consultas, 
+     * especificando el número de página y la cantidad de registros por página.
+     * La función también permite pasar parámetros adicionales para ajustar la consulta.
+     *
+     * @param int $page Número de página a obtener. El valor predeterminado es 1.
+     * @param int $rows Número de registros por página. El valor predeterminado es 100.
+     * @param array $param Parámetros opcionales para ajustar la consulta, como filtros o condiciones adicionales.
+     *
+     * @return array Retorna los resultados de la consulta con los datos paginados, 
+     *              según los parámetros definidos (número de página y cantidad de registros por página).
      */
-    public static function paginate(int $page = 1, int $rows = 100): array {
-
+    public static function paginate(int $page = 1, int $rows = 100, array $param = []): array {
         static::init();
-        $data = static::$db->from(static::$table_default)->paginate($page, $rows);
+
+        $data = static::$db->from(static::$table_default)->paginate($page, $rows, $param);
         static::clear_table();
 
         return $data;
     }
 
     /**
-     * Inicializa la 
+     * Inicializa la configuración del modelo y establece los valores necesarios.
      *
-     * @return void
+     * Este método es responsable de inicializar el modelo, configurando el nombre de la tabla, 
+     * obteniendo las peticiones del usuario y sus valores asociados, y configurando la instancia de la base de datos.
+     * 
+     * - Establece el nombre de la tabla asociada al modelo, utilizando un nombre predeterminado o el nombre de la clase.
+     * - Obtiene los valores de la petición del usuario a través de `DLRequest`.
+     * - Configura la instancia de la base de datos utilizando `DLDatabase`.
+     *
+     * @return void No retorna ningún valor. Se utiliza solo para establecer la configuración inicial.
      */
     protected static function init(): void {
         static::set_table_name(static::$table ?? static::class);
@@ -595,6 +625,7 @@ abstract class Model {
 
         static::$db = DLDatabase::get_instance();
     }
+
 
     /**
      * Permite configurar el ordenamiento por una o varias columnas específicas y un tipo de orden, siendo 'desc' (descendente) el valor predeterminado.
@@ -674,10 +705,15 @@ abstract class Model {
     }
 
     /**
-     * Establece una consulta que permite devolver registro en función de un campo con valor nulo previamente seleccionado.
+     * Establece una consulta que permite devolver registros en función de un campo con valor nulo previamente seleccionado.
      *
-     * @param string $field Campo o columna con valor nulo
-     * @return DLDatabase
+     * Este método estático permite establecer una condición en la consulta SQL para filtrar los registros donde el valor de un campo específico sea `NULL`.
+     * El campo se pasa como parámetro, y la consulta resultante incluirá la cláusula `WHERE {campo} IS NULL`.
+     * 
+     * Se utiliza el nombre de la tabla predeterminada del modelo y ejecuta la consulta sobre ella.
+     * 
+     * @param string $field El nombre del campo o columna que se evaluará para verificar si su valor es `NULL`.
+     * @return DLDatabase Retorna la instancia de la clase `DLDatabase` con la consulta construida, permitiendo encadenar más métodos sobre la consulta.
      */
     public static function field_is_null(string $field): DLDatabase {
         static::init();
@@ -695,6 +731,33 @@ abstract class Model {
          * @var DLDatabase $db
          */
         $db = static::$db->from($table)->field_is_null($field);
+
+        static::clear_table();
+        return $db;
+    }
+
+    /**
+     * Ejecuta una consulta SQL personalizada sobre la base de datos.
+     *
+     * Este método permite ejecutar cualquier consulta SQL arbitraria proporcionada como parámetro,
+     * retornando el objeto de base de datos para permitir un encadenamiento de consultas.
+     *
+     * @param string $query Consulta SQL a ejecutar.
+     *
+     * @return DLDatabase Retorna el objeto de base de datos que contiene el resultado de la consulta.
+     */
+    public static function query(string $query): DLDatabase {
+        static::init();
+
+        /**
+         * Datos obtenidos de la consulta.
+         * 
+         * @var array $data Contiene los registros resultantes de la consulta.
+         */
+        $data = [];
+
+        // Ejecutar la consulta proporcionada
+        $db = static::$db->query($query);
 
         static::clear_table();
         return $db;

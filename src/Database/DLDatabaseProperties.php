@@ -15,6 +15,64 @@ namespace DLTools\Database;
 trait DLDatabaseProperties {
 
     /**
+     * Constante que representa la operación de inserción en una consulta SQL.
+     * 
+     * Esta constante se utiliza para indicar que la operación que se va a realizar es una inserción de datos en la base de datos.
+     * Se utiliza en consultas de tipo `INSERT INTO`.
+     * 
+     * @var string
+     */
+    protected const INSERT = 'INSERT';
+
+    /**
+     * Define la acción de reemplazo en las consultas SQL.
+     *
+     * Esta constante se utiliza para especificar que la operación en una consulta SQL debe
+     * ser un reemplazo en lugar de una inserción o actualización normal. El comando `REPLACE`
+     * funciona similar a un `INSERT`, pero si un registro con una clave primaria existente
+     * ya está presente, este registro será reemplazado por el nuevo, en lugar de causar un error
+     * de clave duplicada.
+     *
+     * En este ejemplo, si los valores para la clave primaria ya existen, el registro será reemplazado
+     * por los nuevos valores.
+     *
+     * @var string
+     */
+    protected const REPLACE = 'REPLACE';
+
+
+    /**
+     * Constante que representa la operación de selección en una consulta SQL.
+     * 
+     * Esta constante se utiliza para indicar que la operación que se va a realizar es una consulta de selección de datos desde la base de datos.
+     * Se utiliza en consultas de tipo `SELECT`.
+     * 
+     * @var string
+     */
+    protected const SELECT = 'SELECT';
+
+    /**
+     * Constante que representa la operación de actualización en una consulta SQL.
+     * 
+     * Esta constante se utiliza para indicar que la operación que se va a realizar es una actualización de datos en la base de datos.
+     * Se utiliza en consultas de tipo `UPDATE`.
+     * 
+     * @var string
+     */
+    protected const UPDATE = 'UPDATE';
+
+    /**
+     * Constante que representa la operación de eliminación en una consulta SQL.
+     * 
+     * Esta constante se utiliza para indicar que la operación que se va a realizar es una eliminación de datos en la base de datos.
+     * Se utiliza en consultas de tipo `DELETE`.
+     * 
+     * @var string
+     */
+    protected const DELETE = 'DELETE';
+
+
+    /**
      * Objeto PDO
      *
      * @var \PDO
@@ -68,7 +126,7 @@ trait DLDatabaseProperties {
      *
      * @var array|string
      */
-    protected array|string $fields = "*";
+    public array|string $fields = "*";
 
     /**
      * Nombre de la tabla con la que se va a interactuar al momento de ejecutar
@@ -155,17 +213,27 @@ trait DLDatabaseProperties {
      *
      * @var boolean
      */
-    protected bool $customer = false;
+    protected bool $customized = false;
 
     /**
-     * Condiciones de la consulta
+     * Almacena la operación actual de la consulta (SELECT, UPDATE, DELETE, etc.).
+     * 
+     * Se utiliza para determinar qué tipo de operación se realizará en la consulta SQL.
+     * 
+     * Por defecto, la operación es una cadena vacía, pero se establece explícitamente cuando se elige una operación 
+     * como `select()`, `update()`, `delete()`, entre otras.
      *
-     * @var array<int, string> $conditions
+     * @var string|null $operation
      */
-    public array $conditions = [];
+    protected ?string $operation = null;
 
-    protected function __construct() {
-        $this->pdo = $this->get_pdo();
-        $this->clean();
-    }
+    /**
+     * Propiedad que define la operación por defecto que se utilizará en la consulta.
+     * 
+     * Si no se ha establecido una operación explícita mediante métodos como `select()`, `update()`, `delete()`, 
+     * esta propiedad se utiliza para asignar el valor predeterminado, que en este caso es "SELECT".
+     *
+     * @var string
+     */
+    protected string $default_operation = "SELECT";
 }
