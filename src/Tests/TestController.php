@@ -269,18 +269,24 @@ final class TestController extends Controller {
         //         ":uuid" => '3c4b9cd7-b675-4d1a-8f80-239fc5567f67',
         //     ]);
 
+        Employee::insert([
+            "uuid" => 'algo',
+            "name" => "David Luna"
+        ]);
+
         return [
             // "employee" => $employee,
             // "empleados" => $empleados,
             // "new_data" => $new_data,
             // "db" => $db,
             // "query" => $query,
-            "register" => Employee::query('SELECT * FROM dl_users')
-                ->where('username', 'like', 'david')
-                // ->set_params('uuid', '3c4b9cd7-b675-4d1a-8f80-239fc5567f67')
-                ->get(),
+            // "register" => Employee::query('SELECT * FROM dl_users')
+            //     ->where('users_name', 'like', '%eduardo%')
+            //     // ->set_params('uuid', '3c4b9cd7-b675-4d1a-8f80-239fc5567f67')
+            //     ->get(),
             // "get" => Employee::get(),
-            "test" => Employee::where('employee_uuid', 'f4480e1b-0db3-4aee-abb5-438ea9d78d88')->get(),
+            // "test" => Employee::where('employee_uuid', 'f4480e1b-0db3-4aee-abb5-438ea9d78d88')->get(),
+            "postgresql" => Employee::get()
 
         ];
     }

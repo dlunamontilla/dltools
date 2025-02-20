@@ -82,7 +82,6 @@ class DLDatabase {
         return $this;
     }
 
-
     /**
      * Genera una lista única de nombres de columnas a partir de una cadena de entrada.
      *
@@ -772,9 +771,9 @@ class DLDatabase {
      *
      * @return self
      */
-    public static function get_instance(): self {
+    public static function get_instance(string $timezone = '+00:00'): self {
         if (!self::$instance) {
-            self::$instance = new self;
+            self::$instance = new self($timezone);
         }
 
         return self::$instance;

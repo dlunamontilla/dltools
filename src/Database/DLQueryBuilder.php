@@ -634,8 +634,8 @@ trait DLQueryBuilder {
      */
     public array $conditions = [];
 
-    protected function __construct() {
-        $this->pdo = $this->get_pdo();
+    protected function __construct(string $timezone = '+00:00') {
+        $this->pdo = $this->get_pdo($timezone);
         $this->clean();
     }
 }

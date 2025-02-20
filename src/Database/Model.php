@@ -79,6 +79,17 @@ abstract class Model {
      */
     protected static ?string $order = "desc";
 
+    /**
+     * Propiedad estática para la zona horaria por defecto.
+     *
+     * Se utiliza para almacenar la zona horaria global del sistema.
+     * El formato debe ser una cadena válida de desplazamiento UTC (por ejemplo, '+00:00', '-05:00').
+     *
+     * @var string $timezone
+     */
+    protected static string $timezone = '+00:00';
+
+
     public function __construct() {
         self::init();
     }
@@ -299,6 +310,41 @@ abstract class Model {
         static::clear_table();
         return $it_was_inserted;
     }
+
+    /**
+     * Reemplaza un registro en la base de datos.
+     * 
+     * Si desea agregar o actualizar un registro, debe hacerlo así:
+     * 
+     * ```php
+     * <?php
+     * ...
+     * 
+     * Tabla::replace([
+     *      "column" => "Contenido de la columna"
+     * ]);
+     * ```
+     * 
+     * Puede agregar múltiples registros proporcionando un array de arrays asociativos.
+     * 
+     * @param array $fields Conjunto de campos y valores a insertar o actualizar.
+     * @param bool $test Indica si la operación debe ejecutarse en modo de prueba.
+     * @return bool `true` si la operación se realizó con éxito, `false` en caso contrario.
+     */
+    public static function replace(array $fields, bool $test = false): bool {
+        static::init();
+
+        /**
+         * Indicador de inserción o actualización de datos.
+         * 
+         * @var bool
+         */
+        $it_was_inserted = static::$db->from(static::$table_default)->replace($fields, $test);
+
+        static::clear_table();
+        return $it_was_inserted;
+    }
+
 
     /**
      * Alias del método estático `insert`.
@@ -623,7 +669,7 @@ abstract class Model {
             static::$values = $values;
         }
 
-        static::$db = DLDatabase::get_instance();
+        static::$db = DLDatabase::get_instance(static::$timezone);
     }
 
 

@@ -3,6 +3,7 @@
 namespace DLTools\Config;
 
 use DLRoute\Requests\DLOutput;
+use DLRoute\Server\DLServer;
 use Error;
 use Exception;
 use PDO;
@@ -23,9 +24,10 @@ trait DLConfig {
 
     /**
      * Establece y obtiene una conexión con el motor de base de datos.
+     * @param string $timezone Zona horaria seleccionada
      * @return PDO
      */
-    public function get_pdo(): PDO {
+    public function get_pdo(string $timezone = '+00:00'): PDO {
 
         /**
          * Credenciales críticas de conexión al servidor de base de datos.
@@ -48,74 +50,55 @@ trait DLConfig {
          */
         $password = $credentials->get_password();
 
-        /**
-         * Nombre de la base de datos
-         * 
-         * @var string
-         */
-        $database = $credentials->get_database();
-
-        /**
-         * Servidor de ejecución del motor de base de datos.
-         * 
-         * @var string
-         */
-        $host = $credentials->get_host();
-
-        /**
-         * Motor de base de datos seleccionada.
-         * 
-         * @var string
-         */
-        $drive = $credentials->get_drive();
-
-        /**
-         * Puerto de la base de datos.
-         * 
-         * @var integer
-         */
-        $port = $credentials->get_port();
-
-        /**
-         * Codificación de caracteres de la base de datos.
-         * 
-         * @var string
-         */
-        $charset = $credentials->get_charset();
-
-        /**
-         * Colación de la base de datos.
-         * 
-         * @var string
-         */
-        $collation = $credentials->get_collation();
+        $drive = strtolower(trim(
+            $credentials->get_drive()
+        ));
 
         /**
          * DSN de conexión
          * 
          * @var string
          */
-        $dsn = "{$drive}:dbname={$database};host={$host};port={$port};charset={$charset};collation={$collation}";
+        $dsn = $this->get_dsn($drive);
 
-        $error_mode = PDO::ERRMODE_EXCEPTION;
+        /** @var array $options */
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ];
 
-        try {
-            $pdo = new PDO($dsn, $username, $password, [
-                PDO::ATTR_ERRMODE => $error_mode
-            ]);
+        $pdo = new PDO($dsn, $username, $password, $options);
+        $this->set_timezone($drive, $pdo, $timezone);
 
-            $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-
-            // return $pdo;
-        } catch (PDOException | Error $error) {
-            $this->exception($error);
-        }
-
-        $pdo->exec("SET time_zone = '+00:00'");
-        
         return $pdo;
     }
+
+    /**
+     * Establece la zona horaria en la sesión de la base de datos según el motor utilizado.
+     *
+     * Este método configura la zona horaria en la conexión activa de PDO,
+     * permitiendo que las consultas y operaciones con fechas se ajusten automáticamente
+     * a la zona horaria especificada.
+     *
+     * @param string $drive    El nombre del motor de base de datos (pgsql, mysql, mariadb).
+     * @param PDO    $pdo      La instancia de la conexión PDO.
+     * @param string $timezone La zona horaria en formato SQL, por defecto '+00:00'.
+     * 
+     * @return void
+     */
+    private function set_timezone(string $drive, PDO &$pdo, string $timezone = '+00:00'): void {
+        switch ($drive) {
+            case 'pgsql':
+                $pdo->exec("SET TIME ZONE '$timezone'");
+                break;
+            case 'mysql':
+            case 'mariadb':
+                $pdo->exec("SET time_zone = '$timezone'");
+                break;
+        }
+    }
+
 
     /**
      * Devuelve errores personalizados
@@ -164,5 +147,73 @@ trait DLConfig {
 
         echo DLOutput::get_json($error, true);
         exit;
+    }
+
+    /**
+     * Obtiene el Data Source Name (DSN) basado en el tipo de base de datos (driver).
+     * 
+     * Genera un DSN que se utiliza para establecer una conexión con
+     * la base de datos, basándose en las credenciales proporcionadas y el tipo de
+     * base de datos especificado en el parámetro `$drive`.
+     * 
+     * El DSN incluye detalles como el nombre de la base de datos, el host, el puerto,
+     * el conjunto de caracteres y la intercalación. Si el tipo de base de datos no
+     * coincide con los casos especificados, se utilizará el DSN para MySQL por defecto.
+     * 
+     * @param string $drive El tipo de base de datos (`mysql`, `mariadb`, `pgsql`, `sqlite`).
+     * 
+     * @return string El DSN correspondiente al tipo de base de datos.
+     * 
+     * @throws InvalidArgumentException Si el tipo de base de datos no es reconocido.
+     */
+    private function get_dsn(string $drive = 'mysql'): string {
+
+        /**
+         * Obtiene las credenciales necesarias para la conexión con la base de datos.
+         * 
+         * Las credenciales incluyen detalles como el nombre de la base de datos, el host,
+         * el puerto, el conjunto de caracteres y la intercalación.
+         * 
+         * @var Credentials $credentials
+         */
+        $credentials = $this->get_credentials();
+
+        /** @var string $database El nombre de la base de datos. */
+        $database = $credentials->get_database();
+
+        /** @var string $host La dirección del servidor de base de datos. */
+        $host = $credentials->get_host();
+
+        /** @var int $port El puerto de conexión al servidor de base de datos. */
+        $port = $credentials->get_port();
+
+        /** @var string $charset El conjunto de caracteres utilizado en la base de datos. */
+        $charset = $credentials->get_charset();
+
+        /** @var string $collation La intercalación utilizada en la base de datos. */
+        $collation = $credentials->get_collation();
+
+        $database = trim($database);
+        $database = trim($database, "\/\\");
+        $database = preg_replace("/[\/\\\]+/", DIRECTORY_SEPARATOR, $database);
+
+        /** @var string $mysql El DSN para MySQL/MariaDB. */
+        $mysql = "mysql:dbname={$database};host={$host};port={$port};charset={$charset};collation={$collation}";
+
+        /** @var string $root */
+        $root = DLServer::get_document_root();
+
+        /** @var string $sqlite_database */
+        $sqlite_database = "{$root}" . DIRECTORY_SEPARATOR . $database;
+
+        /** @var string $dsn El DSN que se genera según el tipo de base de datos. */
+        $dsn = match ($drive) {
+            "mysql", "mariadb" => $mysql,
+            "pgsql" => "pgsql:dbname={$database};host={$host};port={$port}",
+            "sqlite" => "sqlite:{$sqlite_database}",
+            default => $mysql
+        };
+
+        return $dsn;
     }
 }
