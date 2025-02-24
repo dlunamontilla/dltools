@@ -6,6 +6,7 @@ use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
 use Error;
 use Exception;
+use InvalidArgumentException;
 use PDO;
 use PDOException;
 
@@ -68,7 +69,11 @@ trait DLConfig {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ];
 
-        $pdo = new PDO($dsn, $username, $password, $options);
+        /** @var PDO $pdo */
+        $pdo = ($drive == 'sqlite')
+            ? new PDO($dsn, null, null, $options)
+            : new PDO($dsn, $username, $password, $options);
+
         $this->set_timezone($drive, $pdo, $timezone);
 
         return $pdo;
@@ -200,20 +205,60 @@ trait DLConfig {
         /** @var string $mysql El DSN para MySQL/MariaDB. */
         $mysql = "mysql:dbname={$database};host={$host};port={$port};charset={$charset};collation={$collation}";
 
-        /** @var string $root */
-        $root = DLServer::get_document_root();
-
-        /** @var string $sqlite_database */
-        $sqlite_database = "{$root}" . DIRECTORY_SEPARATOR . $database;
-
         /** @var string $dsn El DSN que se genera según el tipo de base de datos. */
         $dsn = match ($drive) {
             "mysql", "mariadb" => $mysql,
             "pgsql" => "pgsql:dbname={$database};host={$host};port={$port}",
-            "sqlite" => "sqlite:{$sqlite_database}",
+            "sqlite", "sqlite3" => $this->get_sqlite_dsn(database: $database),
             default => $mysql
         };
 
         return $dsn;
+    }
+
+    /**
+     * Obtiene el DSN (Data Source Name) para una base de datos SQLite.
+     *
+     * Este método crea el directorio de almacenamiento de la base de datos SQLite si no existe
+     * y devuelve la cadena DSN necesaria para la conexión con PDO.
+     *
+     * @param string $database Nombre de la base de datos sin extensión.
+     * @return string DSN de la base de datos SQLite en formato `sqlite:/ruta/a/la/base_de_datos.sqlite`.
+     *
+     * @throws InvalidArgumentException Si el nombre de la base de datos está vacío.
+     */
+    private function get_sqlite_dsn(string $database): string {
+        // Normaliza la ruta eliminando barras redundantes y caracteres innecesarios
+        $database = preg_replace("/[\\/\\\]+/", DIRECTORY_SEPARATOR, $database);
+        $database = trim($database, "\/\\");
+        $database = trim($database);
+
+        // Verifica si el nombre de la base de datos es válido
+        if (empty($database)) {
+            throw new InvalidArgumentException("El nombre de la base de datos no puede estar vacío");
+        }
+
+        /** @var string $root Directorio raíz del servidor */
+        $root = DLServer::get_document_root();
+
+        /** @var string $db_dir Directorio donde se almacenarán las bases de datos SQLite */
+        $db_dir = $root . DIRECTORY_SEPARATOR . "db";
+
+        // Si el directorio de la base de datos existe pero no es un directorio, se elimina
+        if (file_exists($db_dir) && !is_dir($db_dir)) {
+            unlink($db_dir);
+        }
+
+        // Si el directorio no existe, se crea con permisos adecuados
+        if (!file_exists($db_dir)) {
+            mkdir(
+                directory: $db_dir,
+                permissions: 0755,
+                recursive: true
+            );
+        }
+
+        /** @var string $sqlite DSN de la base de datos SQLite */
+        return "sqlite:{$db_dir}" . DIRECTORY_SEPARATOR . "{$database}.sqlite";
     }
 }

@@ -2,6 +2,7 @@
 
 namespace DLTools\Database;
 
+use DLTools\Config\DLConfig;
 use Exception;
 
 /**
@@ -16,7 +17,7 @@ use Exception;
  */
 trait DLQueryBuilder {
 
-    use DLDatabaseProperties;
+    use DLDatabaseProperties, DLConfig;
 
     /**
      * Establece el límite o rango de registros a devolver.
@@ -27,6 +28,11 @@ trait DLQueryBuilder {
      * @return static
      */
     public function limit(int $start, ?int $rows = null): static {
+        $credentials = $this->get_credentials();
+
+        /** @var string $drive */
+        $drive = $credentials->get_drive();
+
         if ($start < 0) {
             return $this;
         }
@@ -78,9 +84,9 @@ trait DLQueryBuilder {
          * 
          * @var array|integer $quantity
          */
-        $quantity = 0;
-        $quantity = $this->count();
-        $quantity = $quantity['count'] ?? 0;
+        $quantity = 1;
+        $data_quantity = $this->count();
+        $quantity = $data_quantity['count'] ?? 0;
 
         /**
          * Cantidad de registro de comienzo.
@@ -123,10 +129,7 @@ trait DLQueryBuilder {
         }
 
         if (count($register) < 1) {
-            // print_r($this->get_query());
-            var_dump($this->query);
             $register = $this->limit($start, $rows)->get($param);
-            // exit;
         }
 
         if ($quantity <= 0) {
@@ -236,6 +239,24 @@ trait DLQueryBuilder {
      *                y se agregó un tercer parámetro para definir el operador lógico.
      */
     public function where_in(string $field, array $values, string $logical = DLDatabase::AND): DLDatabase {
+        $string_values = $this->get_string_values($field, ...$values);
+
+        /** @var string $condition */
+        $condition = "{$field} IN ({$string_values})";
+
+        $logical = $this->get_logical_operator($logical);
+
+        if (count($this->conditions) > 0) {
+            $condition = "{$logical} {$condition}";
+        }
+
+        $this->conditions[] = $condition;
+        $this->where = "WHERE " . implode(" ", $this->conditions);
+
+        return $this;
+    }
+
+    public function between(string $field, array $values, string $logical = DLDatabase::AND): DLDatabase {
         $string_values = $this->get_string_values($field, ...$values);
 
         /** @var string $condition */
@@ -444,68 +465,35 @@ trait DLQueryBuilder {
      * @return void
      */
     protected function load_table(): void {
-
-        if (!empty(trim($this->table))) {
-            return;
-        }
-
         $this->table = $this->extract_table($this->query);
     }
 
     /**
-     * Extrae el nombre de la primera tabla encontrada en una consulta SQL.
+     * Obtiene el nombre de la tabla asociada a la consulta SQL o asigna un alias temporal.
      *
-     * Este método analiza una consulta SQL en busca de nombres de tabla utilizando
-     * expresiones regulares. Primero busca tablas definidas en subconsultas con alias
-     * (formato `(...) AS nombre`), y si no encuentra ninguna, busca en cláusulas `FROM`.
+     * Si la propiedad `table` no es una cadena válida, se devuelve la consulta SQL proporcionada
+     * envuelta en paréntesis con un alias único `current_tableN`, donde `N` es un contador incremental.
+     * En caso contrario, se retorna el nombre de la tabla almacenado en la propiedad `table`.
      *
-     * @param string|null $query La consulta SQL de la cual extraer el nombre de la tabla.
-     * @return string|null El nombre de la primera tabla encontrada o null si no se encuentra ninguna.
+     * @param string|null $query La consulta SQL a evaluar si no hay una tabla definida.
+     * @return string El nombre de la tabla o un alias temporal único si no está definido.
      */
-    public function extract_table(?string $query = null): ?string {
+    public function extract_table(?string $query = null): string {
+        static $count = 0;
 
-        if (!$query || empty(trim($query))) {
-            return null;
+        $table = $this->table;
+
+        if (is_string($table)) {
+            $table = trim($table);
         }
 
-        /** 
-         * Patrón de expresión regular para extraer el alias de la tabla de una subconsulta.
-         * Este patrón busca una subconsulta encerrada en paréntesis seguida de la palabra clave `AS`
-         * y captura el alias compuesto por caracteres alfanuméricos o guiones bajos.
-         *
-         * @var string $pattern
-         */
-        $pattern = "/\((?:[^()]*|\([^()]*\))*\)\s+as\s+(\w+)/i";
-
-        $found = boolval(
-            preg_match($pattern, $query, $matches)
-        );
-
-        if (!$found) {
-            /** 
-             * Patrón de expresión regular para extraer el nombre de la tabla en una cláusula `FROM`.
-             * Captura el nombre de la primera tabla encontrada después de la palabra `FROM`.
-             */
-            $pattern = "/FROM\s+([\w]+)/i";
-
-            $found = boolval(
-                preg_match($pattern, $query, $matches)
-            );
+        if (is_string($table) && preg_match("/^SELECT/i", $table)) {
+            $table = "({$table}) AS current_table_" . ++$count;
         }
 
-        if (!$found) {
-            return null;
-        }
-
-        /**
-         * Tabla capturada en una consulta SQL
-         * 
-         * @var string $table;
-         */
-        $table = trim($matches[1] ?? '');
-
-        return empty($table) ? null : $table;
+        return is_string($table) ? $table : "($query) as current_table_" . ++$count;
     }
+
 
     /**
      * Restablece el estado interno de la clase DLDatabase.
@@ -637,5 +625,15 @@ trait DLQueryBuilder {
     protected function __construct(string $timezone = '+00:00') {
         $this->pdo = $this->get_pdo($timezone);
         $this->clean();
+    }
+
+    /**
+     * Establece si la consulta actual debe mostrar las tablas de la base de datos.
+     *
+     * @param bool $show Indica si se debe activar la visualización de tablas. Por defecto, es `false`.
+     * @return void
+     */
+    public function set_show_tables(bool $show = true): void {
+        $this->show_tables = $show;
     }
 }

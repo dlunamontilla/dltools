@@ -269,9 +269,6 @@ abstract class Model {
         $data = static::$db->select(...$fields)
             ->from(static::$table_default)
             ->get();
-        // static::$db->select("ciencia");
-        print_r(static::$db->fields);
-        // exit;
 
         static::clear_table();
         return $data;

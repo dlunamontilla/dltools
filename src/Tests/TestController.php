@@ -2,12 +2,11 @@
 
 namespace DLTools\Test;
 
-use DLRoute\Config\Controller;
 use DLRoute\Config\Test;
 use DLRoute\Server\DLServer;
 use DLTools\Compilers\DLView;
+use DLTools\Core\BaseController;
 use DLTools\Database\DLDatabase;
-use DLTools\Database\Model;
 use DLTools\HttpRequest\SendMail;
 use DLTools\Tests\Category;
 use DLTools\Tests\Contacts;
@@ -15,7 +14,7 @@ use DLTools\Tests\Products;
 use DLTools\Tests\Roles;
 use DLTools\Tests\UsersTest\Users;
 
-final class TestController extends Controller {
+final class TestController extends BaseController {
 
     /**
      * Método de ejecución del controlador.
@@ -269,12 +268,13 @@ final class TestController extends Controller {
         //         ":uuid" => '3c4b9cd7-b675-4d1a-8f80-239fc5567f67',
         //     ]);
 
-        Employee::insert([
-            "uuid" => 'algo',
-            "name" => "David Luna"
-        ]);
+        // Employee::create([
+        //     "uuid" => $this->generate_uuid(),
+        //     "name" => "David Luna"
+        // ]);
 
         return [
+            "tables" => DLDatabase::show_tables($params->page, $params->rows),
             // "employee" => $employee,
             // "empleados" => $empleados,
             // "new_data" => $new_data,
@@ -284,9 +284,9 @@ final class TestController extends Controller {
             //     ->where('users_name', 'like', '%eduardo%')
             //     // ->set_params('uuid', '3c4b9cd7-b675-4d1a-8f80-239fc5567f67')
             //     ->get(),
-            // "get" => Employee::get(),
+            "get" => Employee::paginate($params->page, $params->rows),
             // "test" => Employee::where('employee_uuid', 'f4480e1b-0db3-4aee-abb5-438ea9d78d88')->get(),
-            "postgresql" => Employee::get()
+            // "postgresql" => Employee::get()
 
         ];
     }

@@ -227,7 +227,7 @@ final class Credentials implements CredentialsInterface {
      * @return void
      */
     private function validate_type(string $varname, string $actual, string $expected): void {
-        
+
         if ($actual !== $expected) {
             $this->error($varname, $actual, $expected);
         }
@@ -290,7 +290,7 @@ final class Credentials implements CredentialsInterface {
     }
 
     public function get_drive(): string {
-        return $this->drive;
+        return strtolower(trim($this->drive));
     }
 
     public function get_prefix(): string {

@@ -47,17 +47,7 @@ function view(string $view, array $options = []): string {
 }
 
 DLRoute::get('/', function (object $params) {
-    return view('test', [
-        "basedir" => '',
-        "authenticted" => 1,
-        "files" => '',
-        "uploads" => '',
-        "info" => '',
-        "query" => '',
-        "username" => '',
-        "token" => '',
-        "isValid" => ''
-    ]);
+    return view('welcome', []);
 });
 
 $auth = DLAuth::get_instance();

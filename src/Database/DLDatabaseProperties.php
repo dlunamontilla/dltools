@@ -71,6 +71,19 @@ trait DLDatabaseProperties {
      */
     protected const DELETE = 'DELETE';
 
+    /**
+     * Motores de base de datos compatibles con la sentencia REPLACE INTO.
+     *
+     * @const string[] DRIVERS Lista de motores soportados.
+     */
+    protected const DRIVERS = ['mysql', 'mariadb'];
+
+    /**
+     * Indica si la consulta actual es para obtener la lista de tablas de la base de datos.
+     *
+     * @var bool $show_tables
+     */
+    protected bool $show_tables = false;
 
     /**
      * Objeto PDO
@@ -132,9 +145,9 @@ trait DLDatabaseProperties {
      * Nombre de la tabla con la que se va a interactuar al momento de ejecutar
      * una consulta SQL.
      *
-     * @var string
+     * @var string|null
      */
-    protected string $table = "";
+    protected ?string $table = null;
 
 
     /**

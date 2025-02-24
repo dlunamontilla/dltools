@@ -2,6 +2,7 @@
 
 namespace DLTools\Database;
 
+use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
 use Error;
 use Exception;
@@ -81,6 +82,49 @@ class DLDatabase {
 
         return $this;
     }
+
+    /**
+     * Obtiene la lista de todas las tablas de la base de datos.
+     *
+     * Este método recupera la lista de tablas de la base de datos en función del 
+     * motor de base de datos utilizado. Soporta MySQL, MariaDB, PostgreSQL y SQLite.
+     *
+     * @param int $page Número de página para la paginación de los resultados.
+     * @param int $rows Número de filas por página.
+     * 
+     * @return array Listado paginado de las tablas de la base de datos.
+     *
+     * @throws DatabaseException Si ocurre un error en la consulta.
+     */
+    public static function show_tables(int $page = 1, int $rows = 200): array {
+        /** @var DLDatabase $db Instancia de la base de datos. */
+        $db = self::get_instance();
+
+        $db->set_show_tables();
+
+        /** @var Credentials $credentials Credenciales del sistema. */
+        $credentials = $db->get_credentials();
+
+        /** @var string $drive Motor de la base de datos en uso. */
+        $drive = $credentials->get_drive();
+
+        /** @var string $query Consulta SQL para obtener las tablas según el motor de base de datos. */
+        $query = match ($drive) {
+            "mysql", "mariadb" => "SELECT * FROM information_schema.tables WHERE table_schema = DATABASE()",
+            "pgsql" => "SELECT * FROM pg_catalog.pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema')",
+            "sqlite" => "SELECT * FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        };
+
+        /** @var array $data Resultado de la consulta con paginación aplicada. */
+        $data = $db->query($query)
+            // ->get();
+            ->paginate($page, $rows);
+
+        $db->set_show_tables(show: false);
+
+        return $data;
+    }
+
 
     /**
      * Genera una lista única de nombres de columnas a partir de una cadena de entrada.
@@ -310,6 +354,7 @@ class DLDatabase {
      * @return string
      */
     public function get_query(): string {
+        $this->load_table();
 
         if ($this->customized) {
             $this->set_options();
@@ -423,8 +468,19 @@ class DLDatabase {
      * @param array $fields Datos a insertar o reemplazar.
      * @param bool $test Determina si se ejecuta en modo de prueba (true) o real (false).
      * @return string|bool Retorna la consulta SQL en modo prueba o `true`/`false` en ejecución real.
+     * 
+     * @throws Exception
      */
     public function replace(array $fields, bool $test = false): string|bool {
+        $credentials = $this->get_credentials();
+
+        /** @var string $drive */
+        $drive = $credentials->get_drive();
+
+        if (!in_array($drive, self::DRIVERS, true)) {
+            throw new Exception("REPLACE INTO no es compatible con {$drive}. Solo está disponible para MySQL/MariaDB", 500);
+        }
+
         $this->set_operation(self::REPLACE);
         return $this->create($fields, $test, self::REPLACE);
     }
@@ -443,6 +499,9 @@ class DLDatabase {
     private function create(array $fields, bool $test = false, string $operation = SELF::INSERT): string|bool {
         $table = $this->table;
 
+        /** @var string $drive */
+        $drive = $this->get_credentials();
+
         if ($this->empty($table)) {
             throw new Error("Seleccione una tabla");
         }
@@ -453,7 +512,7 @@ class DLDatabase {
 
         foreach ($fields as $key => $value) {
             if (is_string($key)) {
-                array_push($keys, "`$key`");
+                array_push($keys, $this->get_field_quote($key));
                 array_push($new_keys, ":$key");
                 $values[":" . $key] = $value;
             }
@@ -461,12 +520,13 @@ class DLDatabase {
             if (is_array($value) && is_numeric($key)) {
                 $register = [];
 
-                foreach ($value as $newKey => $newValue) {
+                foreach ($value as $new_key => $new_value) {
                     if ($key === 0) {
-                        array_push($keys, "`$newKey`");
-                        array_push($new_keys, ":$newKey");
+                        array_push($keys, $this->get_field_quote($new_key));
+                        array_push($new_keys, ":$new_key");
                     }
-                    $register[":" . $newKey] = $newValue;
+
+                    $register[":" . $new_key] = $new_value;
                 }
 
                 array_push($values, $register);
@@ -477,7 +537,9 @@ class DLDatabase {
         $this->values = $values;
         $this->new_keys = join(", ", $new_keys);
 
-        $query = "{$operation} INTO `{$this->table}` ({$this->fields}) VALUES ({$this->new_keys})";
+        $query = in_array($drive, self::DRIVERS)
+            ? "{$operation} INTO `{$this->table}` ({$this->fields}) VALUES ({$this->new_keys})"
+            : "{$operation} INTO {$this->table} ({$this->fields}) VALUES ({$this->new_keys})";
 
         if (!$test) {
             $stmt = $this->pdo->prepare($query);
@@ -505,6 +567,28 @@ class DLDatabase {
         return false;
     }
 
+    /**
+     * Devuelve el nombre de un campo con las comillas adecuadas según el motor de base de datos.
+     *
+     * Para MySQL/MariaDB, usa backticks (` `).  
+     * Para otros motores como PostgreSQL o SQLite, usa comillas dobles (" ").  
+     *
+     * @param string $field Nombre del campo a entrecomillar.
+     * @return string Nombre del campo con las comillas correspondientes.
+     */
+    private function get_field_quote(string $field): string {
+        $field = trim($field);
+
+        /** Obtiene las credenciales de la base de datos desde las variables de entorno. */
+        $credentials = $this->get_credentials();
+
+        /** @var string $drive Motor de base de datos en uso. */
+        $drive = $credentials->get_drive();
+
+        return in_array($drive, self::DRIVERS)
+            ? "`{$field}`"
+            : "\"{$field}\"";
+    }
 
 
     /**
@@ -539,11 +623,68 @@ class DLDatabase {
             array_push($options, $this->order_by);
         }
 
-        if ($this->limit > 0) {
-            array_push($options, " LIMIT {$this->limit}");
+        /** @var string $limit */
+        $limit = $this->get_limit();
+
+        if ($limit) {
+            array_push($options, $limit);
         }
 
         $this->options = join("", $options);
+    }
+
+    /**
+     * Devuelve el límite compatible con el motor de base de datos que se esté utilizando
+     *
+     * @return string|null
+     */
+    private function get_limit(): ?string {
+        $limit = $this->limit;
+
+        $is_limit = $limit > 0 || empty(trim($limit));
+
+        if (!$is_limit) {
+            return null;
+        }
+
+        $parts = explode(",", $limit);
+
+        if (count($parts) < 2) {
+            $this->set_params("limit", (int) $limit);
+            return "LIMIT :limit";
+        }
+
+        foreach ($parts as &$part) {
+            if (!is_string($part)) {
+                continue;
+            }
+
+            $part = trim($part);
+        }
+
+        /** @var string|int $offset */
+        $offset = $parts[0];
+
+        /** @var string|int $rows */
+        $rows = $parts[1];
+
+        $this->set_params("offset", (int) $offset)
+            ->set_params("rows", (int) $rows);
+
+        /** Credenciales del sistema */
+        $credentials = $this->get_credentials();
+
+        /** @var string $drive */
+        $drive = $credentials->get_drive();
+
+        /** @var bool $is_mysql */
+        $is_mysql = in_array($drive, self::DRIVERS);
+
+        if ($is_mysql) {
+            return " LIMIT :offset, :rows";
+        }
+
+        return " LIMIT :rows OFFSET :offset";
     }
 
     /**
@@ -697,6 +838,8 @@ class DLDatabase {
      * @return string | array
      */
     public function count(string $column = "*", bool $test = false): string | array {
+        $this->set_options();
+
         /**
          * Indica una condicional
          * 
@@ -705,17 +848,19 @@ class DLDatabase {
         $where = trim($this->where);
 
         $column = trim($column);
-        $columnName = $column !== "*" ? $column : 'count';
+
+        /** @var string $column_name */
+        $column_name = $column !== "*" ? $column : 'count';
 
         if ($this->empty($this->table)) {
             throw new Error("Debe seleccionar una tabla primero\n<br>");
         }
 
         $this->table = trim($this->table);
-        $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table}";
+        $query = "SELECT COUNT({$column}) AS {$column_name} FROM {$this->table}";
 
         if (!empty($where)) {
-            $query = "SELECT COUNT({$column}) AS {$columnName} FROM {$this->table} {$where}";
+            $query = "SELECT COUNT({$column}) AS {$column_name} FROM {$this->table} {$where}";
         }
 
         if ($test) {

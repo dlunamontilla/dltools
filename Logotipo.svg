@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="136.94629mm"
+   height="136.94629mm"
+   viewBox="0 0 136.94629 136.94629"
+   version="1.1"
+   id="svg10349"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="Logotipo.svg"
+   inkscape:export-filename="./favicon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview10351"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.53896605"
+     inkscape:cx="119.67359"
+     inkscape:cy="357.16535"
+     inkscape:window-width="1600"
+     inkscape:window-height="785"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs10346" />
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-36.148308,-101.01086)">
+    <path
+       id="rect10425"
+       style="fill:#ffffff;stroke-width:2;stroke-linecap:round;stroke-linejoin:bevel;fill-opacity:1"
+       d="M 104.62165 101.01086 C 66.687564 101.01086 36.148308 131.55012 36.148308 169.4842 C 36.148308 207.41828 66.687564 237.95702 104.62165 237.95702 C 142.55573 237.95702 173.09447 207.41828 173.09447 169.4842 C 173.09447 131.55012 142.55573 101.01086 104.62165 101.01086 z " />
+    <path
+       id="path10453"
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.93129;stroke-linecap:round;stroke-linejoin:bevel;stroke-dasharray:none"
+       d="m 80.261869,135.6893 c -3.865748,0 -6.97795,3.11252 -6.97795,6.97837 v 0.60262 h -3.558318 c -3.865748,0 -6.977949,3.1118 -6.977949,6.97754 v 0.33109 c 0,3.86576 3.112201,6.97754 6.977949,6.97754 h 3.599548 c 0.376214,3.50576 3.327735,6.21872 6.93672,6.21872 h 14.129984 c 3.608984,0 6.560097,-2.71296 6.936307,-6.21872 h 17.08316 c 0.0415,3.82924 3.13682,6.89965 6.97629,6.89965 h 14.12998 c 3.86576,0 6.97754,-3.11221 6.97754,-6.97795 v -14.12957 c 0,-3.86575 -3.11178,-6.97795 -6.97754,-6.97795 h -14.12998 c -3.83947,0 -6.93437,3.07041 -6.97629,6.89965 h -17.04193 v -0.60262 c 0,-3.86585 -3.111789,-6.97837 -6.977537,-6.97837 z m 0,38.82247 c -3.865748,0 -6.97795,3.11211 -6.97795,6.97795 v 0.60305 h -3.558318 c -3.865748,0 -6.977949,3.11178 -6.977949,6.97753 v 0.3311 c 0,3.86574 3.112201,6.97753 6.977949,6.97753 h 3.599548 c 0.376214,3.50575 3.327735,6.21872 6.93672,6.21872 h 14.129984 c 3.608984,0 6.560097,-2.71297 6.936307,-6.21872 h 17.08316 c 0.0415,3.82924 3.13682,6.89965 6.97629,6.89965 h 14.12998 c 3.86576,0 6.97754,-3.1122 6.97754,-6.97795 v -14.12957 c 0,-3.86573 -3.11178,-6.97794 -6.97754,-6.97794 h -14.12998 c -3.83947,0 -6.93437,3.0704 -6.97629,6.89965 h -17.04193 v -0.60305 c 0,-3.86584 -3.111789,-6.97795 -6.977537,-6.97795 z" />
+  </g>
+</svg>

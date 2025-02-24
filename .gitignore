@@ -1,5 +1,7 @@
 # Base de datos
 *.sql
+db
+db/*
 
 # Bibliotecas
 vendor/

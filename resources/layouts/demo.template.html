@@ -1,43 +1,43 @@
 @base('base')
 @section('title')
-Estás abriendo la Demo
+    Estás abriendo la Demo
 @endsection
 @section('content')
-<h2>Estás abriendo la Demo</h2>
-<h3>Autor: David E Luna M</h3>
-<hr>
-@markdown('vista')
-@csrf
+    <h2>Estás abriendo la Demo</h2>
+    <h3>Autor: David E Luna M</h3>
+    <hr>
+    @markdown('vista')
+    @csrf
 @endsection
 
 @section('google')
-<form action="" method="post" id="demo-form">
-    @csrf
+    <form action="" method="post" id="demo-form">
+        @csrf
 
-    <input type="text" name="test" id="test" placeholder="Ingrese un texto" required />
-    <!-- <button type="submit">Test</button> -->
-    <button class="g-recaptcha" data-sitekey="{{ $key }}" data-callback='onSubmit'
-        data-action='submit' type="submit">Submit</button>
-</form>
+        <input type="text" name="test" id="test" placeholder="Ingrese un texto" required />
+        <!-- <button type="submit">Test</button> -->
+        <button class="g-recaptcha" data-sitekey="{{ $key }}" data-callback='onSubmit' data-action='submit'
+            type="submit">Submit</button>
+    </form>
 
-<script src="https://www.google.com/recaptcha/api.js"></script>
-<script>
-    function onSubmit(token) {
-        document.getElementById("demo-form")?.submit();
-        alert(token);
-    }
-</script>
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script>
+        function onSubmit(token) {
+            document.getElementById("demo-form")?.submit();
+            alert(token);
+        }
+    </script>
 
-@php
-use DLTools\Controllers\DLRequest;
-$request = DLRequest::getInstance();
-@endphp
+    @php
+        use DLTools\Controllers\DLRequest;
+        $request = DLRequest::getInstance();
+    @endphp
 
-<pre>@json($request->getValues(), 'pretty')</pre>
+    <pre>@json($request->getValues(), 'pretty')</pre>
 
-<hr>
+    <hr>
 
-<h3>Campo a tomar en cuenta</h3>
+    <h3>Campo a tomar en cuenta</h3>
 
-<pre>g-recaptcha-response</pre>
+    <pre>g-recaptcha-response</pre>
 @endsection
