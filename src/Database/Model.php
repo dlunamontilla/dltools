@@ -39,18 +39,37 @@ abstract class Model {
     public const OR = 'OR';
 
     /**
-     * Nombre de tabla definida por el programador
+     * Nombre de la tabla definida por el programador.
+     *
+     * Esta variable permite definir manualmente la consulta SQL que se usará como origen de datos. 
+     * Se utiliza en casos donde no se quiere hacer referencia directamente a una tabla, sino a 
+     * una subconsulta o una vista personalizada.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * protected static ?string $table = "SELECT * FROM dl_employee WHERE status = 1";
+     * ```
      *
      * @var string|null
      */
     protected static ?string $table = null;
 
     /**
-     * Tabla predeterminada
+     * Nombre de la tabla predeterminada del modelo.
+     *
+     * Se asigna automáticamente basándose en el nombre de la clase del modelo, a menos que el 
+     * programador lo sobrescriba manualmente. Se usa en métodos que requieren una referencia 
+     * directa a la tabla real en la base de datos.
+     *
+     * Ejemplo de uso:
+     * ```php
+     * protected static ?string $table_default = "dl_employee";
+     * ```
      *
      * @var string|null
      */
     protected static ?string $table_default = null;
+
 
     /**
      * Campos de una tabla de la base de datos.
@@ -250,12 +269,14 @@ abstract class Model {
      * la tabla predeterminada y retorna los registros obtenidos. Una vez ejecutada la consulta, 
      * se limpia la referencia a la tabla para evitar reutilizaciones accidentales en futuras consultas.
      *
-     * @param array $params Opcional. Parámetros opcionales para la consulta parametrizada.
-     *                      Se utilizan para evitar inyecciones SQL y mejorar la seguridad.
+     * @param array $params Opcional. Array asociativo de parámetros para la consulta parametrizada.
+     *                      Las claves representan los nombres de los parámetros en la consulta SQL
+     *                      y los valores corresponden a los datos a sustituir. 
+     *                      Esto previene inyecciones SQL y mejora la seguridad.
      *
      * @return array Retorna un array con los registros obtenidos de la consulta.
      */
-    public static function get(string ...$fields): array {
+    public static function get(array $params = []): array {
         static::init();
 
         /**
@@ -263,18 +284,11 @@ abstract class Model {
          * 
          * @var array $data Contiene los registros resultantes de la consulta.
          */
-        $data = [];
-
-
-        // $data = static::$db->from(static::$table_default)->select(...$fields)->get();
-        $data = static::$db->select(...$fields)
-            ->from(static::$table_default)
-            ->get();
+        $data = static::$db->from(static::$table_default)->get($params);
 
         static::clear_table();
         return $data;
     }
-
 
     /**
      * Inserta registro en la base de datos.
@@ -468,7 +482,7 @@ abstract class Model {
         static::init();
 
         /** @var DLDatabase $db */
-        $db = static::$db->set_params($key, $value);
+        $db = static::$db->from(static::$table_default)->set_params($key, $value);
 
         static::clear_table();
         return $db;
@@ -515,11 +529,18 @@ abstract class Model {
 
 
     /**
-     * Selecciona los campos de la tabla
+     * Selecciona los campos de la tabla y devuelve una instancia de DLDatabase para continuar la construcción de la consulta.
      *
-     * @param string $fields Campos
-     * @param string ...$other_fields
-     * @return DLDatabase
+     * Este método inicializa la conexión a la base de datos y selecciona los campos especificados de la tabla predeterminada.
+     * Permite encadenar otros métodos para construir consultas más complejas.
+     * Al finalizar, se limpia la referencia a la tabla para evitar conflictos en futuras consultas.
+     *
+     * @param array|string $fields Nombre del campo o lista de campos a seleccionar. 
+     *                             Si es una cadena, representa un único campo o "*" para seleccionar todos los campos.
+     *                             Si es un array, debe contener los nombres de los campos a seleccionar.
+     * @param string ...$other_fields Campos adicionales a seleccionar. Se pueden pasar como argumentos separados.
+     *
+     * @return DLDatabase Retorna una instancia de DLDatabase para permitir el encadenamiento de métodos.
      */
     public static function select(array|string $fields = "*", string ...$other_fields): DLDatabase {
         static::init();
@@ -528,22 +549,29 @@ abstract class Model {
         return $db;
     }
 
+
     /**
-     * Devuelve el primer registro de una consulta.
+     * Obtiene el primer registro de una consulta ejecutada sobre la tabla predeterminada.
      *
-     * @param string ...$fields Seleccione los campos que se mostrarán
-     * @return array
+     * Este método inicializa la conexión a la base de datos, ejecuta la consulta sobre la tabla definida en el modelo
+     * y devuelve el primer resultado encontrado. Se pueden pasar parámetros opcionales para consultas parametrizadas,
+     * lo que mejora la seguridad y evita inyecciones SQL. 
+     * Una vez ejecutada la consulta, se limpia la referencia a la tabla para evitar reutilizaciones accidentales.
+     *
+     * @param array $params Opcional. Parámetros para la consulta parametrizada, permitiendo filtrar los resultados.
+     *
+     * @return array Retorna un array asociativo con los datos del primer registro encontrado.
+     *               Si no se encuentra ningún resultado, devuelve un array vacío.
      */
-    public static function first(string ...$fields): array {
+    public static function first(array $params = []): array {
         static::init();
 
-        $data = static::$db->from(static::$table_default)
-            ->select(...$fields)
-            ->first();
+        $data = static::$db->from(static::$table_default)->first($params);
 
         static::clear_table();
         return $data;
     }
+
 
     /**
      * Devuelve la cantidad de registros de una tabla.
@@ -779,6 +807,24 @@ abstract class Model {
         static::clear_table();
         return $db;
     }
+
+    /**
+     * Alias de `field_is_null()`, permite filtrar registros donde un campo específico sea `NULL`.
+     *
+     * Este método es un alias de `field_is_null()`, proporcionando una forma más corta y legible 
+     * para establecer una condición en la consulta SQL que filtre los registros en los que 
+     * el valor del campo especificado sea `NULL`. 
+     * 
+     * Internamente, delega la ejecución al método `field_is_null()`, asegurando la misma funcionalidad.
+     *
+     * @param string $field El nombre del campo o columna que se evaluará para verificar si su valor es `NULL`.
+     * @return DLDatabase Retorna la instancia de la clase `DLDatabase` con la consulta construida, 
+     *                    permitiendo encadenar más métodos sobre la consulta.
+     */
+    public static function is_null(string $field): DLDatabase {
+        return static::field_is_null($field);
+    }
+
 
     /**
      * Ejecuta una consulta SQL personalizada sobre la base de datos.

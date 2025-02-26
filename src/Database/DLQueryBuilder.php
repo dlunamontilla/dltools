@@ -210,6 +210,19 @@ trait DLQueryBuilder {
         return $this;
     }
 
+    /**
+     * Alias de `field_is_null` para comprobar si un campo es `NULL`.
+     *
+     * Este método proporciona una alternativa más concisa para verificar si un campo específico tiene un valor `NULL` en la consulta.
+     * Internamente, delega la ejecución a `field_is_null`.
+     *
+     * @param string $field El nombre del campo que se evaluará para verificar si su valor es `NULL`.
+     * @return DLDatabase Retorna la instancia actual de `DLDatabase` con la condición aplicada.
+     */
+    public function is_null(string $field): DLDatabase {
+        return $this->field_is_null($field);
+    }
+
 
     /**
      * Agrega una condición "WHERE IN" a la consulta SQL.

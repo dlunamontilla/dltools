@@ -918,8 +918,10 @@ class DLDatabase {
      */
     public static function get_instance(string $timezone = '+00:00'): self {
         if (!self::$instance) {
-            self::$instance = new self($timezone);
+            self::$instance = new static($timezone);
         }
+
+        self::$instance->clean();
 
         return self::$instance;
     }
