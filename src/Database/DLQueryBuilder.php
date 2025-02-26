@@ -3,6 +3,7 @@
 namespace DLTools\Database;
 
 use DLTools\Config\DLConfig;
+use DLTools\Core\Data\DTO\ValueRange;
 use Exception;
 
 /**
@@ -256,12 +257,46 @@ trait DLQueryBuilder {
         return $this;
     }
 
-    public function between(string $field, array $values, string $logical = DLDatabase::AND): DLDatabase {
-        $string_values = $this->get_string_values($field, ...$values);
+    /**
+     * Establece una condición `BETWEEN` para un campo dentro de un rango de valores.
+     * 
+     * Este método agrega una cláusula `BETWEEN` a la consulta, permitiendo filtrar registros 
+     * cuyos valores estén dentro del rango definido por `$range`. Los valores se asignan como 
+     * parámetros nombrados para garantizar seguridad y evitar inyección SQL.
+     * 
+     * ### Funcionamiento:
+     * - Se generan nombres únicos para los parámetros (`from_X` y `to_X`).
+     * - Se establecen los valores del rango en los parámetros de la consulta.
+     * - Se aplica el formato correcto al nombre del campo según el motor de base de datos.
+     * - Se añade la condición a la cláusula `WHERE`, respetando la lógica establecida.
+     * 
+     * @param string $field Requerido. Nombre del campo sobre el cual se aplicará la condición.
+     * @param ValueRange $range Requerido. Objeto que representa el rango de valores.
+     * @param string $logical Operador lógico opcional (`AND` por defecto). Permite combinar con otras condiciones existentes.
+     * 
+     * @return DLDatabase Retorna la instancia actual para permitir encadenamiento de métodos.
+     * 
+     * @throws InvalidArgumentException Si el campo `$field` está vacío.
+     */
+    public function between(string $field, ValueRange $range, string $logical = DLDatabase::AND): DLDatabase {
+        static $quantity = 0;
+        ++$quantity;
 
-        /** @var string $condition */
-        $condition = "{$field} IN ({$string_values})";
+        /** @var string $from_name Nombre del parámetro para el valor inicial del rango */
+        $from_name = "from_{$quantity}";
 
+        /** @var string $to_name Nombre del parámetro para el valor final del rango */
+        $to_name = "to_{$quantity}";
+
+        $this->set_params($from_name, $range->from);
+        $this->set_params($to_name, $range->to);
+
+        $field = $this->get_field($field);
+
+        /** @var string $condition Condición BETWEEN generada */
+        $condition = "{$field} BETWEEN :{$from_name} AND :{$to_name}";
+
+        /** @var string $logical Operador lógico validado */
         $logical = $this->get_logical_operator($logical);
 
         if (count($this->conditions) > 0) {
@@ -273,6 +308,7 @@ trait DLQueryBuilder {
 
         return $this;
     }
+
 
     /**
      * Convierte una lista de valores en una cadena separada por comas y entrecomillada.

@@ -8,6 +8,7 @@ use Core\Request\Request;
 use DLRoute\Config\Controller;
 use DLRoute\Requests\DLOutput;
 use DLRoute\Server\DLServer;
+use DLTools\Auth\DLCookie;
 use DLTools\Core\Errors\ForbiddenException;
 use DLTools\Core\Traits\Token;
 use Exception;
@@ -66,20 +67,26 @@ abstract class BaseController extends Controller {
     }
 
     /**
-     * Devuelve contenido en formato de texto de un cliente HTTP
+     * Obtiene el contenido en bruto del cuerpo de la solicitud HTTP.
+     * 
+     * Este método lee los datos directamente desde `php://input`, que proporciona
+     * el flujo de entrada sin procesar enviado por el cliente. Es útil para
+     * manejar peticiones con datos en formatos como JSON, XML o formularios
+     * enviados con `application/x-www-form-urlencoded` o `multipart/form-data`.
      *
-     * @return string
+     * @return string El contenido en bruto de la solicitud HTTP.
      */
     protected function get_content(): string {
         /**
-         * Contenido de un cliente HTTP
-         * 
-         * @var string|array
+         * Contenido en bruto de la solicitud HTTP.
+         *
+         * @var string
          */
         $content = @file_get_contents('php://input');
 
         return $content;
     }
+
 
     /**
      * Devuelve en un array asociativo los valores de la petición
@@ -215,12 +222,14 @@ abstract class BaseController extends Controller {
     }
 
     /**
-     * Método para enviar un token CSRF (Cross-Site Request Forgery) como encabezado HTTP.
+     * Método para enviar un token `CSRF (Cross-Site Request Forgery)` como encabezado `HTTP`.
      * Este token se utiliza para proteger contra ataques de referencia cruzada.
      *
+     * @param int $lifetime Opcional. Establece el tiempo de vida del token `CSRF`. El valor por defecto es `DLCookie::LIFETIME_DAY`
+     * @param bool $secure Opcional. Indica si la cookie debe ser enviada a traves de conexiones `HTTPS` únicamente.
      * @return void
      */
-    private function send_csrf_token(): void {
+    private function send_csrf_token(int $lifetime = DLCookie::LIFETIME_DAY, bool $secure = false): void {
         /**
          * Token CSRF
          *
@@ -229,7 +238,15 @@ abstract class BaseController extends Controller {
          * @var string $token
          */
         $token = $this->get_csrf_token();
-        setcookie('__csrf', $token, time() + 3600 * 24 * 6, "/", DLServer::get_hostname(), false, true);
+
+        $cookie = new DLCookie();
+        $cookie->set_name('__csrf');
+        $cookie->set_value(value: $token);
+        $cookie->set_lifetime($lifetime);
+        $cookie->set_path('/');
+        $cookie->set_domain(DLServer::get_hostname());
+        $cookie->set_secure(secure: $secure);
+        $cookie->set_http_only(http_only: true);
     }
 
     /**

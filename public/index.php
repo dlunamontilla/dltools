@@ -1,8 +1,5 @@
 <?php
 
-use DLTools\Auth\DLAuth;
-use DLTools\Test\TestController;
-
 ini_set('display_errors', 1);
 
 /**
@@ -12,8 +9,7 @@ ini_set('display_errors', 1);
  */
 
 use DLRoute\Requests\DLRoute;
-use DLTools\Compilers\DLView;
-use DLTools\Database\Model;
+use DLTools\Core\Output\View;
 
 $sessionExpirte = time() + 1300;
 
@@ -22,50 +18,8 @@ session_start();
 
 include dirname(__DIR__, 1) . "/vendor/autoload.php";
 
-
-/**
- * Devuelve código HTML a partir de una vista.
- *
- * @param string $view Vista a ser procesada.
- * @param array $options Variables para la vista.
- * @return string
- */
-function view(string $view, array $options = []): string {
-    DLView::getInstance();
-
-    ob_start();
-    DLView::load($view, $options);
-
-    /**
-     * Contenido obtenido de la vista.
-     * 
-     * @var string
-     */
-    $content = (string) ob_get_clean();
-
-    return trim($content);
-}
-
-DLRoute::get('/', function (object $params) {
-    return view('welcome', []);
+DLRoute::get('/', function () {
+    return View::get();
 });
-
-$auth = DLAuth::get_instance();
-
-$auth->logged(function () {
-    DLRoute::get('/ciencia', function (object $params) {
-        return $params;
-    });
-});
-
-DLRoute::get('/test/{page}/{rows}', [TestController::class, 'test'])->filter_by_type([
-    "page" => "integer",
-    "rows" => "integer"
-]);
-
-DLRoute::get('/sql/{page}/{rows}', [TestController::class, 'sql'])->filter_by_type([
-    "page" => "integer",
-    "rows" => "integer"
-]);
 
 DLRoute::execute();

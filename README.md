@@ -1,5 +1,10 @@
 # Herramienta DLTools para DLUnire
 
+## Versión de la biblioteca
+
+La versión actual de la biblioteca es `v0.2.0`.
+
+
 ## Instalación
 
 Para instalar `dlunamontilla/dltools` debe escribir el siguiente comando:
@@ -16,11 +21,65 @@ Esta herramienta cuenta con lo siguiente:
 
 - Constructor de consultas.
 - Modelo.
-- Lectura de variables de entorno con tipado estático, a la vez, que permite la lectura de las variables de entorno si archivos de variables de entorno.
+- Lectura de variables de entorno con tipado estático, a la vez que permite la lectura de las variables de entorno sin archivos de variables de entorno.
+  El analizador sintáctico de las variables de entorno lee el nombre de la variable, el tipo definido y si el valor coincide con el tipo que se indicó en la variable de entorno. Es capaz de verificar la validez de una cadena `UUIDv4` y correo electrónico.
+
+  En esta herramienta, el correo electrónico se considera un tipo de datos.
+
+- *Parser* para archivos que terminen en `*.template.html`. El motor de plantillas tiene sintaxis muy similar a **Laravel**.
+
+## Similitud con Laravel
+
+Mientras que en el motor de plantillas de Laravel se utiliza la directiva `@extends('base')` para tomar la plantilla base, en esta herramienta se utiliza la directiva `@base('base')`.
+
+1. Tanto en `Laravel` como en `DLUnire` (ya que `DLTools` se hizo para usar con el framework `DLUnire`) las plantillas se encuentran en el directorioi `/resources/`.
+
+2. En `Laravel` las plantillas terminan en `.blade.php`, mientras que en DLUnire o DLTools terminan en `.template.html`.
+
+3. Puede imprimir en pantalla, en formato JSON, al igual que en `Laravel` un array o un objeto así:
+   ```scss
+    <pre>@json($array, 'pretty')</pre>
+   ```
+
+   Se utilizó como segundo argumento `'pretty'` para indicar que debe imprimirse formateado.
+
+4. También puede incluir archivos `markdown` utilizando la directiva `@markdown('vista')`, sin extensiones, ya que la extensión `.md` se lo agrega directamente la directiva.
+
+    Puede establecer la ruta de la misma forma que se hace con la función `view()`.
+
+    Ejemplo de código para incorporar archivos **markdown** como parte del código HTML ya parseado:
+
+    ```scss
+    <div class="container">
+      @markdown('archivo-markdown')
+    </div>
+    ```
+
+    > Tome e cuenta que los archivos Markdown se guardan también en el directorio `/resources/`, es decir, en la misma ruta que las plantilas `.template.html`.
+    >
+    > Cuando cree su archivo Markdown a incluir en la plantilla no olvide colocarle la extensión `.md` al momento de crear el archivo, pero no agrege la extensión en la directiva `@markdown`, ya que ella se encarga de ello.
+    >
+    > Para la directiva `@markdown` los puntos (`.`) son separadores de rutas.
+
+5. **Ciclos:**
+
+    Para definir ciclos o bucles en `.template.html` se hace de la misma forma que en **Laravel**, es decir:
+
+    ```scss
+    @for ($index = 0; $index < 10; ++$index)
+      <div>Tu código HTML ({$index + 1})</div>
+    @endfor
+    ```
+
+
+
+> ## Importante
+>
+> La documentación todavía no está completa y se está trabajando para terminarla.
 
 Para establecer variables de entorno para autenticar su aplicación con el motor de base de datos, cree un archivo con el nombre `.env.type` y coloque las siguientes líneas:
 
-```envtype
+```bash
 # Indica si la aplicación debe correr o no en producción:
 DL_PRODUCTION: boolean = false
 
@@ -40,7 +99,7 @@ DL_DATABASE_PASSWORD: string = "tu-contraseña"
 DL_DATABASE_NAME: string = "tu-base-de-datos"
 
 # Codificación de caracteres de la base de datos. Si no se define, 
-# entonces, el valor por defecto serà `utf8`:
+# entonces, el valor por defecto será `utf8`:
 DL_DATABASE_CHARSET: string = "utf8"
 
 # Colación del motor de base de datos. Si no se define, el valor por
@@ -52,10 +111,10 @@ DL_DATABASE_COLLATION: string = "utf8_general_ci"
 DL_DATABASE_DRIVE: string = "mysql"
 ```
 
-Si además, necesita enviar correos electrónicos, pegue las siguientes líneas:
+Si además necesita enviar correos electrónicos, pegue las siguientes líneas:
 
-```envtype
-# Usuario de correo electrónico. Tome en cuenta que no debe colocar
+```bash
+# Usuario de correo electrónico. No debe colocar
 # comillas de ningún tipo, porque no se evaluaría si es un correo:
 MAIL_USERNAME: email = no-reply@example.com
 
@@ -76,11 +135,11 @@ MAIL_CONTACT: email = contact@example.com
 
 > **Importante:** para el resaltado de sintaxis, instale **[DL Typed Environment](https://marketplace.visualstudio.com/items?itemName=dlunamontilla.envtype "DL Typed Environment")**
 
-Si desea instalar las _API Key_ de Google para instalar un `reCAPTCHA` puede agregar las siguientes líneas en el archivo `.env.type`:
+Si desea instalar las _API Key_ de Google para implementar un `reCAPTCHA`, puede agregar las siguientes líneas en el archivo `.env.type`:
 
-```entype
+```bash
 # Estas variables son opcionales. Si desea establecer un reCAPTCHA
-# de Google, puedes definirlas aquí:
+# de Google, puede definirlas aquí:
 G_SECRET_KEY: string = "<tu-llave-privada>"
 G_SITE_KEY: string = "<tu-llave-del-sitio>"
 ```
@@ -89,10 +148,9 @@ G_SITE_KEY: string = "<tu-llave-del-sitio>"
 
 ### Modelos
 
-Si desea crear una clase extendendida en un modelo, debe escribir las siguientes líneas:
+Si desea crear una clase extendida en un modelo, debe escribir las siguientes líneas:
 
 ```php
-
 <?php
 
 namespace TuApp\Models;
@@ -102,93 +160,105 @@ use DLTools\Database\Model;
 class Products extends Model {}
 ```
 
-Donde `Products` es la clase que hace referencia a la tabla `products`. Si las tablas de la aplicación usa prefijos, por ejemplo, `wp_`, entonces, deberá definir el prefijo en el archivo `.env.type`:
+Donde `Products` es la clase que hace referencia a la tabla `products` o `dl_products` si en la variable de entorno se define el prefijo `dl_` de esta forma: DL_PREFIX: string = "dl_".
+Si las tablas de la aplicación usan prefijos, por ejemplo, `wp_`, entonces deberá definir el prefijo en el archivo `.env.type`:
 
-```envtype
-DL_PREFIX: string = "wp_"
-```
-
-O si la variable de entorno que ha definido no usa ningún tipo de archivo, asegúrese definirla en su proveedor de hosting (por ejemplo, Heroku), debe tener este nombre de variable:
-
-```none
-DL_PREFIX = "wp_"
+```bash
+DL_PREFIX: string = "dl_"
 ```
 
 Si en el modelo `Products` desea establecer un nombre de tabla diferente, solo tiene que definirla así:
 
 ```php
+<?php
 class Products extends Model {
-
   protected static ?string $table = "otra_tabla";
 }
 ```
 
-Además, ya cuenta con métodos disponibles para interactuar con la base de datos, por ejemplo y que puedes utilizar desde un controlador:
+En el modelo puede agregar una subconsulta así:
 
 ```php
-
-  final class TestController extends Controller {
-
-    /**
-     * Ejemplo de interacción con el modelo `Products`.
-     * 
-     * @return array
-     */
-    public function products(): array {
-      new Products();
-
-      /**
-       * Devuelve, máximo 100 registros
-       * 
-       * @var array $register
-       */
-      $register = Products::get();
-
-      /**
-       * Devuelve un número total de registros almacenados en la tabla
-       * `products`.
-       * 
-       * @var integer $count
-       */
-      $count = Products::count();
-
-      /**
-       * Número de páginas
-       * 
-       * @var integer
-       */
-      $page = 1;
-
-      /**
-       * Número de registro por página.
-       * 
-       * @var integer
-       */
-      $paginate = Products::paginate($page, $rows);
-
-      return [
-        "count" => $count,
-        "register" => $register,
-        "paginate" => $paginate
-      ]
-    }
-  }
+<?php
+class Products extends Model {
+  protected static ?string $table = "SELECT * FROM tabla WHERE record_status = :record_status";
+}
 ```
 
-El fragmento anterior es un ejemplo básico de lo que hace el modelo `Products`, pero no solamente tiene métodos para recuperar registros, también para almacenar nuevos registros, por ejemplo:
+Y DLTools detectará de que se trata de una subconsulta automáticamente.
+
+#### Interacción con la base de datos desde un controlador
 
 ```php
-final class TestController extends Controller {
+<?php
+use DLTools\Core\BaseController;
+
+final class TestController extends BaseController {
+
+  /**
+   * Ejemplo de interacción con el modelo `Products`.
+   * 
+   * @return array
+   */
+  public function products(): array {
+    /**
+     * Devuelve, máximo 100 registros
+     * 
+     * @var array $register
+     */
+    $register = Products::get();
+
+    /**
+     * Devuelve un número total de registros almacenados en la tabla
+     * `products`.
+     * 
+     * @var integer $count
+     */
+    $count = Products::count();
+
+    /**
+     * Número de páginas
+     * 
+     * @var integer
+     */
+    $page = 1;
+
+    /**
+     * Número de registros por página.
+     * 
+     * @var integer
+     */
+    $paginate = Products::paginate($page, 50);
+
+    return [
+      "count" => $count,
+      "register" => $register,
+      "paginate" => $paginate
+    ];
+  }
+}
+```
+
+### Creación de registros
+
+```php
+<?php
+
+use DLTools\Core\BaseController;
+
+final class TestController extends BaseController {
 
   public function products(): array {
-    $products = new Products();
+    $created = Products::create([
+      "product_name" => $this->get_required('product-name'),
+      "product_description" => $this->get_input('product-description')
+    ]);
 
-    $products->product_name = $products->required('product_name');
-    $products->product_description = $product->required('product_description');
-    $products->save();
-
-
-    return [];
+    http_response_code(201);
+    return [
+      "status" => $created,
+      "success" => "Producto creado exitosamente."
+    ];
   }
 }
 ```
@@ -197,10 +267,11 @@ final class TestController extends Controller {
 
 Esta herramienta utiliza `PHPMailer` para enviar correos electrónicos.
 
-Para enviar correos electrónicos desde su controlador, puede hacerlo de la siguiente forma:
-
 ```php
-final class TestController extends Controller {
+<?php
+use DLTools\Core\BaseController;
+
+final class TestController extends BaseController {
 
   /**
    * Ejemplo de envío de correos electrónicos.
@@ -208,50 +279,25 @@ final class TestController extends Controller {
    * @return array
    */
   public function mail(): array {
-
     $email = new SendMail();
 
     return $email->send(
-      $email->get_email('email_field'),
-      $body->get_required('body_field') # Puede contener código HTML
+      $this->get_email('email_field'),
+      $this->get_required('body_field') // Puede contener código HTML
     );
   }
 }
 ```
 
-Además, debe agregar previamente las siguientes líneas en el archivo `.env.type` para poder enviar correos electrónicos:
-
-```envtype
-# Servidor SMTP:
-MAIL_HOST: string = "smtp.su-hosting.com"
-
-# Cuenta de correo que enviará su correo electrónico:
-MAIL_USERNAME: email = no-reply@su-dominio.com
-
-# Contraseña de su cuenta de correo `no-reply@su-dominio.com`:
-MAIL_PASSWORD: string = "contraseña"
-
-# Correo electrónico en el que recibirá respuesta
-MAIL_CONTACT: email = contact@su-dominio.com
-
-```
-
 ### Sistema de autenticación
 
-Para implementar un sistema de autenticación básico, debería crear una clase extendida en `DLUser` como se observa en las siguientes líneas:
-
 ```php
+<?php
 use DLTools\Auth\DLAuth;
 use DLTools\Auth\DLUser;
 
 class Users extends DLUser {
-
   public function capture_credentials(): void {
-    /**
-     * Autenticación del usuario
-     * 
-     * @var DLAuth
-     */
     $auth = DLAuth::get_instance();
 
     $this->set_username(
@@ -275,4 +321,6 @@ class Users extends DLUser {
 
 ## Documentación
 
-Esta documentación se irá actualizando progresivamente sobre el uso completo de esta herramienta. Apenas esto es una parte.
+Esta documentación se irá actualizando progresivamente sobre el uso completo de esta herramienta.
+
+La herramienta `DLTools` tiene funcionalidades muy extensas para ser documentada en tiempos muy breves.

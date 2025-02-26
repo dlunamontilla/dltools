@@ -261,4 +261,46 @@ trait DLConfig {
         /** @var string $sqlite DSN de la base de datos SQLite */
         return "sqlite:{$db_dir}" . DIRECTORY_SEPARATOR . "{$database}.sqlite";
     }
+
+    /**
+     * Devuelve el campo formateado en función del motor de base de datos seleccionado.
+     * 
+     * Este método aplica el formato adecuado a un nombre de campo según el motor de base de datos 
+     * que se esté utilizando. Se emplean diferentes tipos de comillas para evitar conflictos con 
+     * palabras reservadas en distintos motores de bases de datos.
+     *
+     * ## Motores soportados:
+     * - **MariaDB / MySQL:** Usa comillas invertidas (` `).
+     * - **PostgreSQL / SQLite:** Usa comillas dobles (" ").
+     *
+     * @param string $field Campo a ser formateado.
+     * @return string Campo formateado con las comillas adecuadas según el motor de base de datos.
+     * 
+     * @throws InvalidArgumentException Si el campo `$field` está vacío.
+     * 
+     * @author David E Luna M. <https://github.com/dlunamontilla>
+     * @license MIT
+     */
+    protected function get_field(string $field): string {
+        $field = trim($field);
+
+        if (empty($field)) {
+            throw new InvalidArgumentException("El campo \$field no puede estar vacío");
+        }
+
+        /** @var Credentials $credentials */
+        $credentials = $this->get_credentials();
+
+        /** @var string $drive Motor de base de datos en uso */
+        $drive = $credentials->get_drive();
+
+        /** @var string $new_field Campo con el formato adecuado */
+        $new_field = match ($drive) {
+            "mariadb", "mysql" => "`{$field}`",
+            "pgsql", "sqlite", "sqlite3" => "\"{$field}\"",
+            default => "`{$field}`",
+        };
+
+        return $new_field;
+    }
 }

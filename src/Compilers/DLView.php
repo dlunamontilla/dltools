@@ -23,7 +23,7 @@ class DLView {
      */
     private static ?self $instance = NULL;
 
-    private function __construct() {
+    protected function __construct() {
     }
 
     public static function getInstance(): self {

@@ -7,6 +7,7 @@ use DLTools\Config\Credentials;
 use DLTools\Config\DLConfig;
 use DLTools\Config\DLValues;
 use DLTools\Config\Environment;
+use DLTools\Core\Data\DTO\ValueRange;
 use Error;
 
 /**
@@ -801,6 +802,37 @@ abstract class Model {
 
         // Ejecutar la consulta proporcionada
         $db = static::$db->query($query);
+
+        static::clear_table();
+        return $db;
+    }
+
+    /**
+     * Aplica una condición `BETWEEN` en el campo especificado dentro del modelo.
+     *
+     * Este método sirve como un puente hacia `DLDatabase::between()`, permitiendo que el modelo
+     * utilice la condición `BETWEEN` para filtrar registros dentro de un rango de valores.
+     * 
+     * ### Funcionamiento:
+     * - Inicializa la conexión con la base de datos mediante `static::init()`.
+     * - Llama al método `between()` de `DLDatabase`, pasando los parámetros correspondientes.
+     * - Limpia la tabla actual del modelo para evitar efectos no deseados en consultas encadenadas.
+     * - Retorna la instancia de `DLDatabase`, permitiendo continuar la construcción de la consulta.
+     *
+     * @param string $field Requerido. Nombre del campo sobre el cual se aplicará la condición.
+     * @param ValueRange $range Requerido. Objeto que representa el rango de valores.
+     * @param string $logical Operador lógico opcional (`AND` por defecto). Permite combinar con otras condiciones existentes.
+     * 
+     * @return DLDatabase Retorna la instancia de `DLDatabase`, permitiendo encadenamiento de métodos.
+     */
+    public static function between(string $field, ValueRange $range, string $logical = self::AND): DLDatabase {
+        static::init();
+
+        /** @var string $table */
+        $table = static::$table_default;
+
+        /** @var DLDatabase $db */
+        $db = static::$db->from($table)->between(field: $field, range: $range, logical: $logical);
 
         static::clear_table();
         return $db;
