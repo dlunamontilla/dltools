@@ -1,3 +1,9 @@
+## [v0.2.2]
+
+### Eliminación del alias `is_null` en DLDatabase
+
+- Se eliminó el alias `is_null` que apuntaba al método `field_is_null` para evitar colisiones de nombres, particularmente con la clase `DLConfig`.
+
 ## [v0.2.1]
 
 ### Mejoras en `Model`
